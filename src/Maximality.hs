@@ -14,7 +14,6 @@ import Counting
 first :: [Maybe a] -> Maybe a
 first = getFirst . mconcat . map First
 
-
 findWellTypedMigrationsAtDepth :: Int -> Expr -> Env -> [Expr]
 findWellTypedMigrationsAtDepth n t env
   | not $ type_checks t env = 
@@ -76,16 +75,10 @@ is_any_term_maximal (x:xs) env = case (ismaximal x env) of
 
 --is this current migration maximal?
 ismaximal :: Expr -> Env -> Bool
-ismaximal e env = not (try_all_better_terms e env)
+ismaximal e env =  (null (get_the_next_well_typed_term e env))
 
---make sure better terms do not type-check
--- False if any better term type-checks (one level only)
-try_all_better_terms :: Expr -> Env -> Bool
-try_all_better_terms e env =
-    any 
-    (\e' -> type_checks e' env) 
-    (get_the_next_term e)
-
+--   any (\e' -> type_checks e' env) (get_the_next_term e)
+-- null (get_the_next_well_typed_term e env)
 --does this type-check?
 type_checks :: Expr -> Env -> Bool
 type_checks e env = 

@@ -42,9 +42,7 @@ simPrec_sing (ctyp, cons) = snd $ runState (go (ctyp, cons)) (extract_num ctyp +
 
       c -> do
         return (ctyp, [c])
-          --these checks aren't needed
-          -- where isCType t1 = True
-                -- isCType t2 = True
+              -- where (isCType t1 && isCType t2)
 
 --step 1: simPrec
 simPrec :: (CType, [Constraint]) ->  (CType, [Constraint])
@@ -76,6 +74,34 @@ simMatch cs = map concat . sequence $
                , [ simMatch_sing1 c  | applicable_s c]
                , [ simMatch_sing2 c  | applicable_s c] ]
       | c <- cs]
+
+
+-- simConSing:: Constraint -> Maybe [Constraint]
+-- simConSing (Consistency (Consistency t1 t2) CBool) = Nothing
+-- simConSing (Consistency (Consistency t1 t2) CInt) = Nothing
+-- simConSing (Consistency CBool (Consistency t1 t2)) = Nothing
+-- simConSing (Consistency CInt (Consistency t1 t2)) = Nothing
+-- simConSing (Consistency CBool CInt) = Nothing
+-- simConSing (Consistency CInt CBool) = Nothing
+-- simConSing (Consistency CBool CBool) = Just []
+-- simConSing (Consistency CInt CInt) = Just []
+-- simConSing (Consistency t CDyn) = Just []
+-- simConSing (Consistency CDyn t) = Just []
+-- simConSing (Consistency (CArr v1 v2) (CArr v1' v2')) =
+--  Just [(Consistency v1 v1'), (Consistency v2 v2')]
+-- simConSing (Consistency t v) = 
+--   case (isCType t) && (not (isCType v)) of 
+--     True -> Just [(Consistency v t)]
+--     otherwise -> []
+
+
+
+-- data Constraint 
+--   = Matching CType CType 
+--   | Equality CType CType
+--   | Consistency CType CType
+--   | Precision CType CType
+--   deriving (Eq, Data)
              
 -- --add non-applicable elements to every sublist
 -- process_combinations :: [[Constraint]] -> [Constraint] -> [[Constraint]]

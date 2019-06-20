@@ -9,28 +9,33 @@
 {-# Language TemplateHaskell #-}
 {-# Language ScopedTypeVariables #-}
 {-# Language FlexibleContexts #-}
+{-# Language ViewPatterns #-}
+
 
 --capture avoidance not accounted for in this solver
 module SolveEq where
-import Data.Typeable
 import Data.Data
-import Data.Void
 import Data.List as List
-import Data.Map as Map
-import Data.Set as Set
-import Data.Foldable as Foldable
-import Data.Maybe (fromJust)
-import Data.Maybe (isJust)
-import Control.Monad
-import TypeCheck
 import Data.Comp.Variables
 import Data.Comp.Unification
 import Data.Comp.Term
 import Data.Comp.Derive
 import Constraint
-import Lang
-import Algorithms
+-- import Data.Void
+-- import Data.List as List
+-- import Data.Set as Set
+-- import Data.Foldable as Foldable
+import Data.Maybe (fromJust)
+-- import Data.Maybe (isJust)
+-- import TypeCheck
+-- import Data.Typeable
+-- import Lang
+-- import Algorithms
+import qualified Data.Map as Map
 
+
+-- main :: IO ()    -- This says that main is an IO action.
+-- main = return () -- This tells main to do nothing.
 
 data CTypeF a 
     = CVarF Int 
@@ -78,39 +83,6 @@ unravel a =
 call_unifier :: [Constraint] -> Either (UnifError CTypeF Int) (Subst CTypeF Int)
 call_unifier c = (unify (toFequations c))
 
--- getUnificationResults :: Either (UnifError CTypeF Int) (Subst CTypeF Int) -> (Subst CTypeF Int)
--- getUnificationResults res = case res of
---   Left (FailedOccursCheck v term) -> Nothing
---   Left (HeadSymbolMismatch t1 t2) -> Nothing
---   Left (UnifError str)              -> Nothing
---   Right (subst :: Subst CTypeF Int) -> (Just (fmap unravel subst))
-
--- By matching against Left and Right, we're letting GHC know that unify
--- should return an Either; this disambiguates `m`
-
-
--- cnst = (constraint lam_xx tenv)
--- cnst_simprec = (simPrec cnst)
--- cnst_simMatch = (simMatch (snd cnst_simprec))
--- cnst_simMatch1 = (head cnst_simMatch)
--- cnst_simMatch2 = (last cnst_simMatch)
--- cnst_test = [CVar 0 .= (CVar 1 .~> CVar 2), 
---             (CVar 3) .= (CVar 5 .~> CVar 2),
---              CVar 3 .= CVar 1,
---              CVar 4 .= CVar 1]
-
--- c0 = Term (CVarF 0)
--- c1 = Term (CVarF 1)
--- c2 = Term (CVarF 2)
--- c3 = Term (CVarF 3)
--- c4 = Term (CVarF 4)
--- c5 = Term (CVarF 5)
-
--- eq1 = (c0, (Term (CArrF c1 c2)))
--- eq2 = (c3, (Term (CArrF c5 c2)))
--- eq3 = (c3, c1)
--- eq4 = (c4, c1)
-
 pleaseUnify :: [Constraint] -> Either String [(Int, CType)]
 pleaseUnify cnt = case (call_unifier cnt) of
   Left (FailedOccursCheck v term) -> 
@@ -123,16 +95,36 @@ pleaseUnify cnt = case (call_unifier cnt) of
     Right (Map.toList $ fmap unravel subst)
 
 
+--apply unifier to consistency constraints
+getConsistConst :: [Constraint] -> [Constraint]
+getConsistConst [] = []
+getConsistConst (Consistency c1 c2 :xs) = 
+    (Consistency c1 c2) : (getConsistConst xs)
+getConsistConst (x:xs) = (getConsistConst xs)
 
 
--- main = case (call_unifier cnst_simMatch1) of
---   Left (FailedOccursCheck v term) -> putStrLn ("failed occurs check " ++ 
---                                      show v ++ ": " ++ (show $ unravel term))
---   Left (HeadSymbolMismatch t1 t2) -> putStrLn ("head symbol mismatch " ++ 
---                                      show (unravel t1)  ++ " =/= " ++ 
---                                      (show $ unravel t2))
---   Left (UnifError str)              -> putStrLn str
---   Right (subst :: Subst CTypeF Int) -> print (fmap unravel subst)
+--substitute type in solution
+substituteSol :: CType -> [(Int, CType)] -> CType
+
+substituteSol (CVar x) (List.lookup x -> Just t) = t
+substituteSol (CArr v1 v2) sol = (CArr (substituteSol v1 sol)  
+                                       (substituteSol v2 sol))
+substituteSol t sol = t
+
+-- (CVar x) sol =  fromJust (List.lookup x sol)
+-- substituteSol CInt sol = CInt
+-- substituteSol CBool sol = CBool
+-- substituteSol CDyn sol = CDyn
+
+apply_unifier ::  [Constraint] -> [(Int, CType)] -> [Constraint]
+apply_unifier  [] sol = []
+apply_unifier ((Consistency v1 v2):xs) sol = (Consistency (substituteSol v1 sol) 
+                                                    (substituteSol v2 sol)) :
+                                        (apply_unifier xs sol)
+apply_unifier (x:xs) sol = (apply_unifier xs sol)
+
+
+--fixed point todo
 
 
 
