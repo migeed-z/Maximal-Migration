@@ -34,6 +34,14 @@ test = hspec $ do
     test_pleaseUnify
     test_filter_consist
     test_apply_unifier
+    test_simCon
+    test_composition
+    test_filter_isJust
+    test_boundedness_sing
+    test_boundnessOneSet
+    test_boundness
+    test_finitness
+
     -- describe "lambda parser" $ do
     --     it "works" $ do
     --         [prog|\x:*. x|] `shouldBe` (Lam Tdyn "x" (Vv "x"))
@@ -403,13 +411,29 @@ test_simMatch = describe "simMatch" $ do
 
     -- let constraints = (snd (fixed simPrec (constraint succ_lam_true tenv)))
    
-    -- example constraints [[]]
+    -- example succ_lam_true tenv [[]]
 
     where 
-        example :: [Constraint]  -> [[Constraint]] -> Spec
-        example c expected = do 
-            it ("sees that " ++ show c ++ " simplifies matching to " ++ show expected) $ do
-                (simMatch c)`shouldBe` expected
+        example :: Expr  -> Env -> [[Constraint]] -> Spec
+        example expr env expected = do 
+            it ("sees that " ++ show expr ++ " simplifies matching to " ++ show expected) $ do
+                (compose_upto_match expr env)`shouldBe` expected
+
+
+test_unify2n :: Spec
+test_unify2n = describe "apply unifier 2n" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    -- let constraints = (snd (fixed simPrec (constraint succ_lam_true tenv)))
+    example succ_lam_true tenv []
+
+    where 
+        example :: Expr  -> Env -> [[Constraint]] -> Spec
+        example expr env expected = do 
+            it ("sees that " ++ show expr ++ "apply unifier 2n" ++ show expected) $ do
+                  (apply_unifier_to_2n (compose_upto_match expr env)) `shouldBe` expected
 
 test_pleaseUnify :: Spec
 test_pleaseUnify = describe "Unifies to" $ do
@@ -461,7 +485,7 @@ test_filter_consist = describe "Filter consistenct constraints" $ do
             it ("sees that " ++ show c ++ " filters consistency to " ++ show expected) $ do
                 (getConsistConst c) `shouldBe` expected
 
---todo
+
 test_apply_unifier :: Spec
 test_apply_unifier = describe "Apply unifier to consistency" $ do
     
@@ -485,9 +509,6 @@ test_apply_unifier = describe "Apply unifier to consistency" $ do
                                          CVar 4 .~ CVar 8,
                                          CVar 8 .~ CBool]
 
-    --example 2
-    -- example (getConsistConst )                                                
-
 
     it "should handle x" $ do
         "x" `shouldBe` "x"
@@ -499,62 +520,226 @@ test_apply_unifier = describe "Apply unifier to consistency" $ do
         example c sol expected = do 
             it ("sees that " ++ show c ++ " applies consistenct constraints "
                                        ++ show expected) $ do
-                (apply_unifier c sol) `shouldBe` expected
-
-    -- let e = (Vi 4)
-    -- let i = (Lam Tdyn "x" (Vv "x"))
-    -- let ap = (App i e)
-
-    -- example e [((CVar 0) .= CInt)]
-    -- example i [(CVar 0) .= ((CVar 1) .~> (CVar 2)),
-    --                                  (CDyn .<= (CVar 1)), 
-    --                                  ((CVar 2) .= (CVar 1) )]
-    -- example ap [(CVar 1) .|> ((CVar 5) .~> (CVar 0)),
-    --             ((CVar 5) .~ (CVar 4)), 
-    --             (CVar 1) .= ((CVar 2) .~> (CVar 3)),
-    --              CDyn .<= (CVar 2),
-    --              (CVar 3) .= (CVar 2),
-    --              (CVar 4) .= CInt]
- 
-    -- example succ_lam [(CVar 0) .= ((CVar 1) .~> (CVar 2)),
-    --                   CDyn .<= (CVar 1),
-    --                   (CVar 3) .|> ((CVar 5) .~> (CVar 2)),
-    --                   (CVar 5) .~ (CVar 4),
-    --                   (CVar 3) .= (CInt .~> CInt),
-    --                   (CVar 4) .= (CVar 1)]
-
-    -- example succ_lam_true [(CVar 0) .= ((CVar 1) .~> (CVar 2)),
-    --                        CDyn .<= (CVar 1),
-    --                        (CVar 3) .|> ((CVar 11) .~> (CVar 2)),
-    --                        (CVar 11) .~ (CVar 4),
-    --                        (CVar 3) .= (CVar 1),
-    --                        (CVar 5) .|> ((CVar 10) .~> (CVar 4)),
-    --                        (CVar 10) .~ (CVar 6),
-    --                        (CVar 5) .= (CInt .~> CInt),
-    --                        (CVar 7) .|> ((CVar 9) .~> (CVar 6)),
-    --                        (CVar 9) .~ (CVar 8),
-    --                        (CVar 7) .= (CVar 1),
-    --                        (CVar 8) .= CBool]
-
-
-    -- example lam_xx [(CVar 0) .= ((CVar 1) .~> (CVar 2)), 
-    --                 CDyn .<= (CVar 1),
-    --                 (CVar 3) .|> ((CVar 5) .~> (CVar 2)),
-    --                 (CVar 5) .~ (CVar 4),
-    --                 (CVar 3) .= (CVar 1),
-    --                 (CVar 4) .= (CVar 1)]
+                fixed_uni apply_unifier c sol `shouldBe` expected
 
 
 
+test_simCon :: Spec
+test_simCon = describe "Simplify constraints" $ do
+    
+    example [] (Just [])
 
-    -- it "should handle x" $ do
-    --     pleaseUnify [] `shouldBe` Right []
+    -- --example 1
+
+    example  [(CVar 11) .~ CInt, CInt .~ (CVar 2), (CVar 11) .~ CBool] 
+              (Just [(CVar 11) .~ CInt, (CVar 2) .~ CInt, (CVar 11) .~ CBool]  )
+                                              
+
+    example [CDyn .~ CInt,
+             CInt .~ CDyn,
+             CDyn .~ CBool] (Just[])
+
+
+    example [CVar 5 .~ (CVar 5 .~> CVar 2)] (Just [CVar 5 .~ (CVar 5 .~> CVar 2)])
+
+
+    example [CInt .~ CVar 4, CVar 4 .~ CVar 8, CVar 8 .~ CBool]  (Just [CVar 4 .~ CInt, CVar 4 .~ CVar 8, CVar 8 .~ CBool])
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: [Constraint] -> Maybe [Constraint] -> Spec
+        example c expected = do 
+            it ("sees that " ++ show c ++ " applies consistenct constraints "
+                                       ++ show expected) $ do
+                fixedM simCon c  `shouldBe` expected
+   
+
+
+test_composition :: Spec
+test_composition = describe "composes upto consistency to" $ do
+    
+    example lam_xx tenv [Just [CVar 5 .~ (CVar 5 .~> CVar 2)],
+                                                     Just []]
+
+    example succ_lam_true tenv [Just [CVar 11 .~ CInt,CVar 2 .~ CInt, CVar 11 .~ CBool],Just []]
+
+    example app_xy_succ_true tenv [Just [CVar 4 .~ CInt,CVar 4 .~ CVar 8,
+                                         CVar 8 .~ CBool]]
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Env -> [Maybe [Constraint]] -> Spec
+        example expr env expected = do 
+            it ("sees that " ++ show expr ++ " composes constraints into (final step) "
+                                       ++ show expected) $ do
+                compose_all expr env  `shouldBe` expected
+
+
+test_filter_isJust :: Spec
+test_filter_isJust  = describe "re-writes the constraints" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    example [Just [CVar 5 .~ (CVar 5 .~> CVar 2)],Just [], Nothing] 
+            [[CVar 5 .~ (CVar 5 .~> CVar 2)],[]]
+
+
+    where 
+        example :: [Maybe [Constraint]] -> [[Constraint]] -> Spec
+        example cnst expected = do 
+            it ("sees that " ++ show cnst ++ " re-writes constraints without Maybe "
+                                       ++ show expected) $ do
+                filter_isjust cnst `shouldBe` expected
+
+
+
+test_boundedness_sing :: Spec
+test_boundedness_sing  = describe "boundedness for one variable" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    example (CVar 5) [CVar 5 .~ (CVar 5 .~> CVar 2)] False
+    example (CVar 2) [CVar 11 .~ CInt,CVar 2 .~ CInt, CVar 11 .~ CBool] True
+    example (CVar 11) [CVar 11 .~ CInt,CVar 2 .~ CInt, CVar 11 .~ CBool] True
+    example (CVar 0) [CVar 0 .~ (CVar 1 .~> CVar 2),
+                      CVar 1 .~ CInt,
+                      CVar 2 .~ CInt] False
+
+    example (CVar 4) [CVar 4 .~ CInt, CVar 4 .~ CVar 8, CVar 8 .~ CBool] True
+    example (CVar 8) [CVar 4 .~ CInt, CVar 4 .~ CVar 8, CVar 8 .~ CBool] True
+
+    example (CVar 0) [CVar 0 .~ (CInt .~> CVar 1), CVar 0 .~ (CVar 2 .~> CBool)] True
+
+
+    where 
+        example :: CType -> [Constraint] -> Bool -> Spec
+        example typ cnst_lst expected = do 
+            it ("sees that " ++ show typ ++ show cnst_lst ++ " boundness for one var is "
+                                       ++ show expected) $ do
+                boundnessOneVar typ cnst_lst 2 `shouldBe` expected
+
+
+
+test_boundnessOneSet :: Spec
+test_boundnessOneSet  = describe "boundedness for one set of constraints" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    let c1 = [CVar 5 .~ (CVar 5 .~> CVar 2)] 
+    let c2 = [CVar 11 .~ CInt,CVar 2 .~ CInt, CVar 11 .~ CBool]
+    let c3 = [CVar 0 .~ (CVar 1 .~> CVar 2),
+                      CVar 1 .~ CInt,
+                      CVar 2 .~ CInt]
+
+    let c4 = [CVar 4 .~ CInt, CVar 4 .~ CVar 8, CVar 8 .~ CBool]
+
+    example c1 c1 False
+    example c2 c2 True
+    example c3 c3 False
+    example c4 c4 True
+
+    where 
+        example :: [Constraint] -> [Constraint]  -> Bool -> Spec
+        example cnst_lst1 cnst_lst2 expected = do 
+            it ("sees that " ++ show cnst_lst2 ++ " boundness for one var is "
+                                       ++ show expected) $ do
+                boundnessOneSet cnst_lst1 cnst_lst2 `shouldBe` expected
+
+
+
+test_boundness :: Spec
+test_boundness  = describe "boundedness for constraints" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    let c1 = [CVar 5 .~ (CVar 5 .~> CVar 2)] 
+    let c2 = [CVar 11 .~ CInt,CVar 2 .~ CInt, CVar 11 .~ CBool]
+    let c3 = [CVar 0 .~ (CVar 1 .~> CVar 2),
+                      CVar 1 .~ CInt,
+                      CVar 2 .~ CInt]
+
+    let c4 = [CVar 4 .~ CInt, CVar 4 .~ CVar 8, CVar 8 .~ CBool]
+    let c5 = [CVar 0 .~ (CInt .~> CVar 1),
+             CVar 0 .~ (CVar 2 .~> CBool)]
+
+
+    example [c1] False
+    example [c2] True
+    example [c3] False
+    example [c4] True
+    example [c5] True --questionable bec. what if there are variables on the RHS but not on LHS?
+
+    where 
+        example :: [[Constraint]] -> Bool -> Spec
+        example cnst_lst expected = do 
+            it ("sees that " ++ show cnst_lst ++ " is boundness = "
+                                       ++ show expected) $ do
+                boundedness cnst_lst `shouldBe` expected
+
+
+
+
+test_finitness :: Spec
+test_finitness  = describe "check finitness" $ do
+    
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+
+    let x_4 = (App (Vv "x") (Vi 4))
+    let x_true = (App (Vv "x") (Vb True))
+    let my_succ = (App (Vv "succ") x_true)
+    let my_succ2 = (App (Vv "succ") x_4)
+    let lam_z = (Lam Tdyn "z" (Vb True))
+    let first_app = (App lam_z my_succ)
+    let lam_y = (Lam Tdyn "y" first_app)
+    let appx  = (App lam_y my_succ2)
+    let final = (Lam Tdyn "x" appx)
+
+
+    let app_y = (Lam  Tdyn "y" (Vv "x"))
+    let app_x = (App app_y (Vv "x"))
+    let app_xx = (App app_x (Vv "x"))
+    let my_lam = (Lam Tdyn "x" app_xx)
+
+
+    let app1 = (App (Vv "x") (Vb True))
+    let app2 = (App (Vv "x") (Vi 5))
+    let lam1 = (Lam Tdyn "y" app2)
+    let lam2 = (Lam Tdyn "x" (App lam1 app1))
+
+    example succ_lam_true True
+    example lam_xx False
+    example app_xy_succ_true True
+    example (App (Lam Tdyn "x" (Vv "x")) (Vb True)) True
+    example final True
+    example my_lam False
+    example lam2 False
+
+
+    where 
+        example :: Expr -> Bool -> Spec
+        example expr expected = do 
+            it ("sees that " ++ show expr ++ " is finite = "
+                                       ++ show expected) $ do
+                check_finitness expr tenv `shouldBe` expected
+
+
 
 --ex1
 succ_lam_true =  (Lam Tdyn "x" (App (Vv "x") 
                  (App (Vv "succ") (App (Vv "x") (Vb True)))))
 
-lam_succ_cnst =(simMatch (snd (fixed simPrec (constraint succ_lam_true tenv))))
+lam_succ_cnst =(compose_upto_match succ_lam_true tenv)
 const_eq_lam_0 = lam_succ_cnst !! 0
 lam_succ_unify0 =  (pleaseUnify const_eq_lam_0)
 
@@ -564,19 +749,16 @@ lam_succ_unify5 =  (pleaseUnify const_eq_lam_5)
 
 --ex2
 lam_xx = (Lam Tdyn "x" (App (Vv "x") (Vv "x")))
-lam_xx_cnst =(simMatch (snd (fixed simPrec (constraint lam_xx tenv))))
+lam_xx_cnst = (compose_upto_match lam_xx tenv)
 const_eq_lam_xx_0 = lam_xx_cnst !! 0
 lam_xx_unify0 = (pleaseUnify const_eq_lam_xx_0)
-
-
--- succ((λy.y)((λx.x)true)) 
-
+ 
 --ex3
 app_xy_succ_true = (App (Vv "succ") 
                     (App (Lam Tdyn "y" (Vv "y")) 
                       (App (Lam Tdyn "x" (Vv "x")) (Vb True))))  
 
-app_xy_succ_true_cnst =(simMatch (snd (fixed simPrec (constraint app_xy_succ_true tenv))))
+app_xy_succ_true_cnst =(compose_upto_match app_xy_succ_true tenv)
 app_xy_succ_true_cnst_0 = app_xy_succ_true_cnst !! 0
 app_xy_succ_true_cnst_unify0 = (pleaseUnify app_xy_succ_true_cnst_0)
 
@@ -621,7 +803,6 @@ evil_example_max =
 
     where 
         const = (Lam Tint "x" (Lam Tint "y" (Vv "x")))   
-
 
 
 -- 5
