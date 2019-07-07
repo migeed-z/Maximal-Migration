@@ -9,6 +9,13 @@ import TypeCheck
 import Data.Monoid (First (..), mconcat)
 import Data.Maybe
 import Counting
+import qualified Data.Set as Set
+import SolveEq
+
+
+unique :: Eq a => [a] -> [a]
+unique []       = []
+unique (x : xs) = x : unique (filter (x /=) xs)
 
 
 first :: [Maybe a] -> Maybe a
@@ -26,22 +33,28 @@ findWellTypedMigrationsAtDepth n t env
   | otherwise = 
     [ t ]
 
-    -- | Returns the maximal migration closest to the term.
-findWellTypedMigrationsLimited :: Int -> Expr -> Env -> [Expr]
-findWellTypedMigrationsLimited d t env =
-  concat [ findWellTypedMigrationsAtDepth n t env | n <- [0..d]]
+--     -- | Returns the maximal migration closest to the term.
+-- findWellTypedMigrationsLimited :: Int -> Expr -> Env -> [Expr]
+-- findWellTypedMigrationsLimited d t env =
+--   concat [ findWellTypedMigrationsAtDepth n t env | n <- [0..d]]
 
--- | Returns the maximal migration closest to the term.
-findWellTypedMigrations :: Expr -> Env -> [Expr]
-findWellTypedMigrations t env =
-  findWellTypedMigrationsLimited (migration_limit t env * count_types t) t env
+-- -- | Returns the maximal migration closest to the term.
+-- findWellTypedMigrations :: Expr -> Env -> [Expr]
+-- findWellTypedMigrations t env =
+--   findWellTypedMigrationsLimited (1+(migration_limit t env * count_types t)) t env
       
 
 -- | finds ALL maximal migration in exactly depth N, if they exists.
 findMaximalMigrationsAtDepth :: Int -> Expr -> Env -> [Expr]
 findMaximalMigrationsAtDepth n t env =
-  [ t' | t' <- findWellTypedMigrationsAtDepth n t env, ismaximal t' env]
+  unique [ t' | t' <- findWellTypedMigrationsAtDepth n t env, ismaximal t' env]
 
+
+
+-- | Returns the maximal migration closest to the term.
+findAllMaximalMigrationsN :: Int -> Expr -> Env -> [Expr]
+findAllMaximalMigrationsN d t env =
+  concat [ findMaximalMigrationsAtDepth n t env | n <- [0..d+1]]
 
 -- | Returns the maximal migration closest to the term.
 findAllMaximalMigrations :: Expr -> Env -> [Expr]
@@ -51,6 +64,15 @@ findAllMaximalMigrations t env =
     maximalNumberOfSteps = 
       (migration_limit t env)  * (count_types t)
 
+
+
+-- | Returns the maximal migration closest to the term.
+findAllMaximalMigrationsUnlimited :: Expr -> Env -> [Expr]
+findAllMaximalMigrationsUnlimited t env =
+  concat 
+  . map (unique . filter (\t' -> ismaximal t' env))
+  . takeWhile (not . null)
+  $ [ findWellTypedMigrationsAtDepth n t env | n <- [0..]]
 
 -- | finds the maximal migration in exactly depth N, if it exists.
 findMaximalMigration :: Int -> Expr -> Env -> Maybe Expr
@@ -65,6 +87,14 @@ closestMaximalMigration t env =
     case findAllMaximalMigrations t env of
     x:_ -> Just x
     [] -> Nothing
+
+
+finalMaximalMigration :: Expr -> Env -> [Expr]
+finalMaximalMigration e env = 
+  case (check_finitness e env) of 
+    True -> (findAllMaximalMigrationsUnlimited e env)
+    otherwise -> (findAllMaximalMigrations e env)
+
 
 --for a given level in the lattice, check if anything is maximal
 is_any_term_maximal :: [Expr] -> Env -> Maybe Expr
@@ -118,32 +148,30 @@ type_test_succ = do
   print(get_the_next_well_typed_term lam tenv)
 
 
-test_printer = do
-  -- let app_5 = (App (Lam Tdyn "x" (Vv "x")) (Vi 5))
+-- test_printer = do
+--   -- let app_5 = (App (Lam Tdyn "x" (Vv "x")) (Vi 5))
 
-  -- let app_f_5 = (App (Vv "f") app_5)
+--   -- let app_f_5 = (App (Vv "f") app_5)
 
-  -- let lam_z = (Lam Tdyn "z"  app_f_5 )
+--   -- let lam_z = (Lam Tdyn "z"  app_f_5 )
 
-  -- let app_f_true = (App (Vv "f") (Vb True))
+--   -- let app_f_true = (App (Vv "f") (Vb True))
 
-  -- let lam_f = (Lam Tdyn "f" (App lam_z app_f_true))
+--   -- let lam_f = (Lam Tdyn "f" (App lam_z app_f_true))
 
-  -- let lam_y = (Lam Tdyn "y" (Vv "y"))
+--   -- let lam_y = (Lam Tdyn "y" (Vv "y"))
 
-  -- let my_app = (App  lam_f lam_y)
-
-
-
-  let my_succ = (App (Vv "succ") (App (Lam Tdyn "y" (Vv "y")) 
-                (App (Lam Tdyn "x" (Vv "x")) (Vb True)) ) )
+--   -- let my_app = (App  lam_f lam_y)
 
 
-  print(my_succ)
-  print(findWellTypedMigrations my_succ tenv)
-  -- print(closestMaximalMigration my_app tenv)
+
+--   let my_succ = (App (Vv "succ") (App (Lam Tdyn "y" (Vv "y")) 
+--                 (App (Lam Tdyn "x" (Vv "x")) (Vb True)) ) )
 
 
+--   print(my_succ)
+--   print(findWellTypedMigrations my_succ tenv)
+--   -- print(closestMaximalMigration my_app tenv)
 
 
 

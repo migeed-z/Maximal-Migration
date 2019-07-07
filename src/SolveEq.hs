@@ -122,7 +122,13 @@ apply_unifier  [] sol = []
 apply_unifier ((Consistency v1 v2):xs) sol = (Consistency (substituteSol v1 sol) 
                                                     (substituteSol v2 sol)) :
                                         (apply_unifier xs sol)
-apply_unifier (x:xs) sol = (apply_unifier xs sol)
+
+
+-- apply_unifier ((Equality v1 v2):xs) sol = (Equality (substituteSol v1 sol) 
+--                                                     (substituteSol v2 sol)) :
+--                                         (apply_unifier xs sol)
+
+apply_unifier (x:xs) sol = x:(apply_unifier xs sol)
 
 fixed_uni :: Eq a => (a -> b -> a) -> a -> b -> a
 fixed_uni f a b
@@ -220,10 +226,12 @@ boundnessOneVar (CVar v1) ((Consistency (CVar v2) (CArr t1 t2)):xs) 0 | v1 == v2
 boundnessOneVar (CVar v) (x:xs) direc = (boundnessOneVar (CVar v) xs direc) 
 
 
+--this is the one that we need to edit.
 boundnessOneSet :: [Constraint] -> [Constraint] -> Bool
 boundnessOneSet [] _ = True --might need to turn this into False
 boundnessOneSet ((Consistency (CVar v) c) : xs) lst = (boundnessOneVar (CVar v) lst 2) &&
                                                       (boundnessOneSet xs lst)
+boundnessOneSet (x:xs) lst = (boundnessOneSet xs lst)                                                    
 
 boundedness :: [[Constraint]] -> Bool
 boundedness cnst = not (elem False 
@@ -234,7 +242,28 @@ boundedness cnst = not (elem False
 check_finitness :: Expr -> Env -> Bool
 check_finitness e env = (boundedness (filter_isjust (compose_all e env)))
 
+has_maximality :: Expr -> Env -> Bool
+has_maximality e env = not (elem True (map has_self_loop (filter_isjust (compose_all e env))))
 
+--check if a list of consistency constraints have a self loop
+has_self_loop :: [Constraint] -> Bool
+has_self_loop [] = False
+has_self_loop ((Consistency (CVar v) t):xs) = 
+  (occ (CVar v) t) || (has_self_loop xs)
+
+
+--check if v1 occurs in v2 for constraints of the form v1 ~ v2
+occ :: CType -> CType ->  Bool
+occ (CVar v1) (CVar v2) = (v1 == v2)
+occ (CVar v) (CArr t1 t2) = (occ (CVar v) t1) || (occ (CVar v) t2)
+occ (CVar v) _ = False 
+
+
+-- --checks if a consistency constraint has a self loop
+-- have_self_loop :: Constraint -> Bool
+-- have_self_loop (Consistency (CVar v1) (CVar v2)) = True
+-- have_self_loop _ = False
+--     where v1 = v2
 
 
 
