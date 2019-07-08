@@ -143,14 +143,8 @@ constraint t senv  = snd $ runState (go t []) 0 where
         gid' <- gen 
         return ([ fid .|> (CArr gid' v), gid' .~ gid] ++ fcs ++ gcs)
 
+        
     return (v, cs)
-
-
-
-
-
-
-
 
 
 

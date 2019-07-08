@@ -23,17 +23,17 @@ main = test
 
 test :: IO ()
 test = hspec $ do
-    -- test_maximality
-    -- test_typechecking
+    test_maximality
+    test_typechecking
     -- test_migrate_type_check
-    -- test_migrate
+    test_migrate
     -- test_mult_migrate
-    -- test_the_next_terms
+    test_the_next_terms
     -- test_migration_limit
-    -- test_get_type
+    test_get_type
     test_const_gen
     test_simPrec
-    test_simMatch
+    -- test_simMatch
     test_pleaseUnify
     test_filter_consist
     test_apply_unifier
@@ -424,6 +424,7 @@ test_const_gen = describe "constraint generation" $ do
     let i = (Lam Tdyn "x" (Vv "x"))
     let ap = (App i e)
 
+
     example e [((CVar 0) .= CInt)]
     example i [(CVar 0) .= ((CVar 1) .~> (CVar 2)),
                                      (CDyn .<= (CVar 1)), 
@@ -490,7 +491,6 @@ test_simPrec = describe "SimPrec" $ do
                          CDyn .<= (CVar 2)])
 
 
-
     example constraints (fst constraints, (delete (CDyn .<= (CVar 1)) 
                                                   (snd constraints)))
 
@@ -505,6 +505,7 @@ test_simPrec = describe "SimPrec" $ do
                             (CVar 5) .= CBool,
                             (CVar 6) .= CBool ])
     
+
 
     -- example evil_constraints (CVar 0, [])
 
@@ -805,7 +806,7 @@ test_boundness  = describe "boundedness for constraints" $ do
     example [c3] False
     example [c4] True
     example [c5] True --questionable bec. what if there are variables on the RHS but not on LHS?
-    example i_n False
+    example i_n True
 
 
     where 
@@ -888,7 +889,7 @@ test_finitness  = describe "check finitness" $ do
     example simple_app True
     example lam_xyy False
     example evil_example False
-    example (Lam Tdyn "x" (Vv "x")) True
+    example (Lam Tdyn "x" (Vv "x")) False
     example self_application False
     example succ_lam_true True
     example evil False
@@ -906,54 +907,6 @@ test_finitness  = describe "check finitness" $ do
             it ("sees that " ++ show expr ++ " is finite = "
                                        ++ show expected) $ do
                 check_finitness expr tenv `shouldBe` expected
-
-
-
-
-test_has_maximality :: Spec
-test_has_maximality  = describe "Has maximal migration" $ do
-    
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
-
-
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tdyn "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tdyn "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam Tdyn "x" appx)
-
-
-    let app_y = (Lam  Tdyn "y" (Vv "x"))
-    let app_x = (App app_y (Vv "x"))
-    let app_xx = (App app_x (Vv "x"))
-    let my_lam = (Lam Tdyn "x" app_xx)
-
-
-    -- let app1 = (App (Vv "x") (Vb True))
-    -- let app2 = (App (Vv "x") (Vi 5))
-    -- let lam1 = (Lam Tdyn "y" app2)
-    -- let lam2 = (Lam Tdyn "x" (App lam1 app1))
-
-    example succ_lam_true True
-    example lam_xx False
-    example app_xy_succ_true True
-    example (App (Lam Tdyn "x" (Vv "x")) (Vb True)) True
-    example final True
-    example my_lam False
-    -- example lam2 False
-
-
-    where 
-        example :: Expr -> Bool -> Spec
-        example expr expected = do 
-            it ("sees that " ++ show expr ++ " has maximal migration = "
-                                       ++ show expected) $ do
-                has_maximality expr tenv `shouldBe` expected
 
 
 

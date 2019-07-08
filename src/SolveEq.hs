@@ -23,6 +23,8 @@ import Data.Comp.Derive
 import Constraint
 import Data.Bool(bool)
 import Control.Monad(liftM2)
+import Lang
+import Constraint
 -- import Data.Void
 -- import Data.List as List
 -- import Data.Set as Set
@@ -122,13 +124,7 @@ apply_unifier  [] sol = []
 apply_unifier ((Consistency v1 v2):xs) sol = (Consistency (substituteSol v1 sol) 
                                                     (substituteSol v2 sol)) :
                                         (apply_unifier xs sol)
-
-
--- apply_unifier ((Equality v1 v2):xs) sol = (Equality (substituteSol v1 sol) 
---                                                     (substituteSol v2 sol)) :
---                                         (apply_unifier xs sol)
-
-apply_unifier (x:xs) sol = x:(apply_unifier xs sol)
+apply_unifier (x:xs) sol = (apply_unifier xs sol)
 
 fixed_uni :: Eq a => (a -> b -> a) -> a -> b -> a
 fixed_uni f a b
@@ -153,6 +149,7 @@ simConSing (Consistency (CArr t1 t2) (CArr t1' t2')) =
                               (Consistency t2 t2')]
 simConSing (Consistency (CVar v1) (CVar v2)) = Just [(Consistency (CVar v1) (CVar v2))]
 simConSing (Consistency t (CVar v)) = Just [(Consistency (CVar v) t)]
+
 simConSing c = Just [c]
 
 simCon :: [Constraint] -> Maybe [Constraint]
@@ -177,6 +174,17 @@ apply_unifier_to_2n [] = []
 apply_unifier_to_2n (x:xs) = case (pleaseUnify x) of 
           (Left _) -> (apply_unifier_to_2n xs)
           (Right sol) -> ((apply_unifier x sol) : (apply_unifier_to_2n xs))
+
+
+
+--compose 2n and remove the ones with no solution.
+apply_unifier_to_2n_new :: [[Constraint]] -> [([Int],[Constraint])]
+apply_unifier_to_2n_new [] = []
+apply_unifier_to_2n_new (x:xs) = case (pleaseUnify x) of 
+          (Left _) -> (apply_unifier_to_2n_new xs)
+          (Right sol) -> ((map fst sol),(apply_unifier x sol)) : (apply_unifier_to_2n_new xs)
+
+
 
 -- Compose all operations
 compose_upto_match :: Expr -> Env -> [[Constraint]]
@@ -226,38 +234,83 @@ boundnessOneVar (CVar v1) ((Consistency (CVar v2) (CArr t1 t2)):xs) 0 | v1 == v2
 boundnessOneVar (CVar v) (x:xs) direc = (boundnessOneVar (CVar v) xs direc) 
 
 
---this is the one that we need to edit.
 boundnessOneSet :: [Constraint] -> [Constraint] -> Bool
-boundnessOneSet [] _ = True --might need to turn this into False
+boundnessOneSet [] _ = True 
 boundnessOneSet ((Consistency (CVar v) c) : xs) lst = (boundnessOneVar (CVar v) lst 2) &&
                                                       (boundnessOneSet xs lst)
-boundnessOneSet (x:xs) lst = (boundnessOneSet xs lst)                                                    
 
 boundedness :: [[Constraint]] -> Bool
 boundedness cnst = not (elem False 
                        [(boundnessOneSet cnst_set cnst_set) | 
-                        cnst_set <- cnst])
-
+                        cnst_set <- cnst]) 
 
 check_finitness :: Expr -> Env -> Bool
-check_finitness e env = (boundedness (filter_isjust (compose_all e env)))
-
-has_maximality :: Expr -> Env -> Bool
-has_maximality e env = not (elem True (map has_self_loop (filter_isjust (compose_all e env))))
-
---check if a list of consistency constraints have a self loop
-has_self_loop :: [Constraint] -> Bool
-has_self_loop [] = False
-has_self_loop ((Consistency (CVar v) t):xs) = 
-  (occ (CVar v) t) || (has_self_loop xs)
+check_finitness e env = (boundedness (filter_isjust (compose_all e env)) ) &&
+                        (new_check (collect_all_vars (snd (constraint e env))) 
+                        [collect_all_vars_rhs s | s <- (filter_isjust (compose_all e env))]
+                        (check_nothing (check_finitness_all e env) (compose_all e env)))
 
 
---check if v1 occurs in v2 for constraints of the form v1 ~ v2
-occ :: CType -> CType ->  Bool
-occ (CVar v1) (CVar v2) = (v1 == v2)
-occ (CVar v) (CArr t1 t2) = (occ (CVar v) t1) || (occ (CVar v) t2)
-occ (CVar v) _ = False 
 
+check_nothing :: [[Int]] -> [Maybe [Constraint]] -> [[Int]]
+check_nothing [] [] = []
+check_nothing (x:xs) (Nothing : xs2) = (check_nothing xs xs2)
+check_nothing (x:xs) (x1 : xs2) = (x: (check_nothing xs xs2))
+check_nothing ints _ = ints
+
+
+-- l2 check against
+-- l3 boundedness
+new_check :: [Int] -> [[Int]] -> [[Int]] -> Bool
+new_check l1 [] [] = True
+new_check l1 _ [] = True
+new_check _ l2 [] = True
+new_check l1 (x1:xs1) (x2:xs2) = (length l1) <= ((length x1) + (length x2)) && (new_check l1 xs1 xs2)
+                                 
+-- && (compare_all_const e env)
+
+
+-- compare_all_const :: Expr -> Env -> Bool
+-- compare_all_const e env =  (comapare_list_wise (check_finitness_all e env) (collect_free_vars e)
+
+check_finitness_all :: Expr -> Env -> [[Int]]
+check_finitness_all e env =  (map fst (apply_unifier_to_2n_new (compose_upto_match e env)))
+
+
+
+collect_all_vars :: [Constraint] -> [Int]
+collect_all_vars [] = []
+collect_all_vars (x:xs) = rmdups( (collect_free_vars_cnst x) ++ (collect_all_vars xs))
+
+collect_all_vars_rhs :: [Constraint] -> [Int]
+collect_all_vars_rhs [] = []
+collect_all_vars_rhs (x:xs) = rmdups( (collect_free_vars_cnst_rhs x) ++ (collect_all_vars_rhs xs))
+
+
+collect_free_vars_cnst :: Constraint -> [Int]
+collect_free_vars_cnst (Matching v1 v2) = (collect_free_vars v1) ++ (collect_free_vars v2)
+collect_free_vars_cnst (Consistency v1 v2) = (collect_free_vars v1) ++ (collect_free_vars v2)
+collect_free_vars_cnst (Equality v1 v2) = (collect_free_vars v1) ++ (collect_free_vars v2)
+collect_free_vars_cnst (Precision v1 v2) = (collect_free_vars v1) ++ (collect_free_vars v2)
+
+
+collect_free_vars_cnst_rhs :: Constraint -> [Int]
+collect_free_vars_cnst_rhs (Matching v1 v2) = (collect_free_vars v1) 
+collect_free_vars_cnst_rhs (Consistency v1 v2) = (collect_free_vars v1) 
+collect_free_vars_cnst_rhs (Equality v1 v2) = (collect_free_vars v1) 
+collect_free_vars_cnst_rhs (Precision v1 v2) = (collect_free_vars v1) 
+
+
+
+collect_free_vars :: CType -> [Int]
+collect_free_vars (CVar v) = [v]
+collect_free_vars (CArr v1 v2) = (collect_free_vars v1) ++ (collect_free_vars v2)
+collect_free_vars _ = [] 
+
+
+
+rmdups :: (Ord a) => [a] -> [a]
+rmdups = map head . group . sort
 
 -- --checks if a consistency constraint has a self loop
 -- have_self_loop :: Constraint -> Bool
@@ -265,10 +318,23 @@ occ (CVar v) _ = False
 -- have_self_loop _ = False
 --     where v1 = v2
 
+-- data CType 
+--   = CVar Int 
+--   | CArr CType CType
+--   | CInt
+--   | CDyn
+--   | CBool
+--   deriving (Eq, Data)
+ 
 
+-- infixr 7 .~>
+-- (.~>) = CArr
 
-
-
-
+-- data Constraint 
+--   = Matching CType CType 
+--   | Equality CType CType
+--   | Consistency CType CType
+--   | Precision CType CType
+--   deriving (Eq, Data)
 
 
