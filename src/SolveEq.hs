@@ -263,8 +263,8 @@ check_nothing ints _ = ints
 -- l3 boundedness
 new_check :: [Int] -> [[Int]] -> [[Int]] -> Bool
 new_check l1 [] [] = True
-new_check l1 _ [] = False
-new_check _ l2 [] = False
+-- new_check l1 _ [] = False
+-- new_check _ l2 [] = False
 new_check l1 (x1:xs1) (x2:xs2) = (length l1) == ((length x1) + (length x2)) && (new_check l1 xs1 xs2)
                                  
 -- && (compare_all_const e env)
