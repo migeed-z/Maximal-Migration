@@ -27,7 +27,7 @@ test = hspec $ do
     test_typechecking
     -- test_migrate_type_check
     test_migrate
-    -- test_mult_migrate
+    test_mult_migrate
     test_the_next_terms
     -- test_migration_limit
     test_get_type
@@ -971,41 +971,32 @@ test_mult_migrate = describe "find multiple migrations" $ do
  
 
 
-    -- example final []
-    -- example my_lam []
-
-    -- example lam 0
-    
-    -- -- example simple_app []
-
-
-    -- example lam_xyy 0
-
-    -- -- example (Lam Tdyn "x" (Vv "x")) []
-    -- example self_application 0
-
-
-    -- -- example succ_lam_true []
-
+    -- example final 0
+    -- example my_lam 0
+    -- -- example lam (Just lam_max)
+    -- example simple_app 0
+    example lam_xyy []
+    -- example (Lam Tdyn "x" (Vv "x")) 0
+    -- -- example self_application Nothing
+    -- example succ_lam_true 0
     -- example evil 0
-
-    example evil_example 0
-
-    -- example (Lam Tdyn "x" (App (Vv "x") my_succ)) []
+    -- example (Lam Tdyn "x" (App (Vv "x") my_succ)) 0
     -- example (App (Vv "succ") 
-    --             (App(Lam Tdyn "y" (Vv "y"))
-    --                 (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) []
-    -- example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) []
+    --         (App(Lam Tdyn "y" (Vv "y"))
+    --             (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) 0
+
+    -- example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) 0
+
 
    
     it "should handle x" $ do
         "x" `shouldBe` "x"
 
     where 
-        example :: Expr -> Int -> Spec
+        example :: Expr -> [Expr] -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ "has migrations " ++ show expected) $ do
-                length (finalMaximalMigration term  tenv) `shouldBe` expected
+                findAllMaximalMigrationsN 1 term  tenv `shouldBe` expected
 
 
 
@@ -1070,7 +1061,7 @@ lam_xyy =
         app_yxx = (App (App (Vv "y") (Vv "x")) (Vv "x"))
 
 lam_xyy_max =
-    Lam Tint "x" (Lam (Tint ~> Tdyn ~> Tdyn) "y" app_yxx)
+    Lam Tdyn "x" (Lam (Tint ~> Tbool ~> Tint) "y" app_yxx)
     where
         app_yxx = (App (App (Vv "y") (Vv "x")) (Vv "x"))
 

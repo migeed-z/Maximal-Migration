@@ -47,7 +47,7 @@ findWellTypedMigrationsAtDepth n t env
 -- | finds ALL maximal migration in exactly depth N, if they exists.
 findMaximalMigrationsAtDepth :: Int -> Expr -> Env -> [Expr]
 findMaximalMigrationsAtDepth n t env =
-  unique [ t' | t' <- findWellTypedMigrationsAtDepth n t env, ismaximal t' env]
+   [ t' | t' <- findWellTypedMigrationsAtDepth n t env, ismaximal t' env]
 
 
 
@@ -120,9 +120,11 @@ type_checks e env =
 get_the_next_type :: Vtype -> [Vtype]
 get_the_next_type Tdyn = [(Tdyn ~> Tdyn), Tint, Tbool]
 get_the_next_type (Tfun t1 t2) = 
-     [(Tfun s t2) | s <- (get_the_next_type t1)] ++
-     [(Tfun t2 s) | s <- (get_the_next_type t2)] 
-get_the_next_type _ = []
+     [(Tfun s1 t2) | s1 <- (get_the_next_type t1)] ++
+     [(Tfun t1 s2) | s2 <- (get_the_next_type t2)] 
+get_the_next_type Tint = []
+get_the_next_type Tbool = []
+
 
 --get the better term one level up the lattice
 get_the_next_term :: Expr -> [Expr]
