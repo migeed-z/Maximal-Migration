@@ -1,7 +1,11 @@
-{-# Language LambdaCase #-}
-{-# Language DeriveDataTypeable #-}
+{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveAnyClass #-}
+{-# LANGUAGE DeriveGeneric #-}
 module Lang where
 
+import Control.DeepSeq
+import GHC.Generics
 
 import Data.Data
 import Data.List as List
@@ -14,7 +18,7 @@ data Vtype = Tint
            | Tbool
            | Tdyn
            | Tfun Vtype Vtype
-           deriving (Eq, Data)
+           deriving (Eq, Data, Generic, NFData)
 
 infixr 7 ~>
 (~>) = Tfun
@@ -24,7 +28,7 @@ data Expr = Vi Int
           | Vv Name
           | App Expr Expr
           | Lam Vtype Name Expr
-          deriving (Eq, Data)
+          deriving (Eq, Data, Generic, NFData)
 
 type Env = [(Name,Vtype)]
 

@@ -1,7 +1,10 @@
 {-# Language QuasiQuotes #-}
+{-# LANGUAGE OverloadedStrings #-}
+
 module Main where
 
 import Test.Hspec
+import Examples
 import Data.List
 import Maximality
 import TypeCheck
@@ -12,6 +15,8 @@ import Constraint
 import Algorithms
 import SolveEq
 import Data.Either
+import NPHard
+import Formula
 import Data.Maybe (fromJust)
 import qualified Data.Map as Map
 
@@ -40,7 +45,14 @@ test = hspec $ do
     test_boundnessOneSet
     test_boundness
     test_finitness
+    test_topchoice
     test_lam_yxx
+    test_migrate_large
+    test_migrate_fpaper
+    -- test_evil
+
+
+
     -- test_has_maximality
  
     -- describe "lambda parser" $ do
@@ -109,21 +121,14 @@ test_typechecking :: Spec
 test_typechecking = describe "type checking" $ do
     let c = Lam Tdyn "x" (Vv "x")
     let a = (App (App c c) c)
-    let x_true = (App (Vv "x") (Vb True))
     let my_lam_succ = (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") x_true)))
     let self_application = (Lam (Tdyn ~> Tbool) "x" (App (Vv "x") (Vv "x")))
-
-
     let my_succ_app2 = (App (Vv "succ") x_true)
     let my_succ_app3 = (App (Vv "x") my_succ_app2)
     let my_succ = (Lam Tdyn "x" my_succ_app3)
-
     let app3 = (App (Lam Tdyn "x" (Vv "x")) (Vi 3))
 
-    let app_y = (Lam Tdyn "y" (Vv "x"))
-    let app_x = (App app_y (Vv "x"))
-    let app_xx = (App app_x (Vv "x"))
-    let lam = (Lam Tdyn "x" app_xx)
+
 
 
     example a tenv True
@@ -135,31 +140,55 @@ test_typechecking = describe "type checking" $ do
     example lam tenv True
     example lam_xyy tenv True
     example succ_lam tenv True
+    example (make_mapping f1) tenv True
+    example lam_term_1 tenv True
+    example app_term_2 tenv True
 
     where 
         example term env val = 
             termit "typechecks" term $ do
                 (type_checks term env) `shouldBe` val
 
-
+--the singleton checker
 test_maximality :: Spec
 test_maximality = describe "maximality" $ do
-    example (Vi 4) True
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tint "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tint "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam (Tdyn ~> Tint) "x" appx)
+    
+    --main tests
+    example lam_xx_plus_xx False
+    example final False
+    example my_lam False
+    example simple_app False
+    example lam_xyy False
+    example evil_example False
+    example (Lam Tdyn "x" (Vv "x")) False
+    example self_application False
+    example succ_lam_true False
+    example evil False
+    example (Lam Tdyn "x" (App (Vv "x") my_succ)) False
+    example (App (Vv "succ") 
+            (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) False
+
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    example (App (Lam Tint "x" (Vv "x")) (Vb True)) True
+    example lam_term_1 False
+    example app_term_2 False
+    example (make_mapping fpaper) False
+    example (make_mapping f8) False
 
 
-    -- let max_migraion = (Lam Tdyn "x" expr_max)
-    -- let expr_max = ((Vv "x") True)
 
-    example final True
+    --scalability
+    example (make_mapping f1) False
+    example (make_mapping f2) False
+    example (make_mapping f3) False
+    example (make_mapping f4) False
+    example (make_mapping f5) False
+    example (make_mapping f6) False
+    example (make_mapping f7) False
+    example (make_mapping f8) False
+
+
 
     it "should handle x" $ do
         "x" `shouldBe` "x"
@@ -172,73 +201,64 @@ test_maximality = describe "maximality" $ do
                 ismaximal term tenv `shouldBe` expected
 
 
+
+
+test_topchoice :: Spec
+test_topchoice = describe "top choice" $ do
+    
+    example lam_xx_plus_xx []
+    example final [max_final]
+    example my_lam [my_lam_max]
+    example simple_app [simple_app_max]
+    example lam_xyy []
+    example evil_example []
+    example (Lam Tdyn "x" (Vv "x")) []
+    example self_application []
+    example succ_lam_true [succ_lam_true_max]
+    example evil []
+    example (Lam Tdyn "x" (App (Vv "x") my_succ))  [(Lam (Tdyn ~> Tint) "x" (App (Vv "x") my_succ))]
+    example (App (Vv "succ") 
+            (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) [(App (Vv "succ") 
+            (App(Lam Tint "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))), (App (Vv "succ") 
+            (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tbool "x" (Vv "x"))(Vb True))))]
+
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) [(Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x"))))]
+    example (App (Lam Tint "x" (Vv "x")) (Vb True)) []
+    example lam_term_1 []
+    example app_term_2 []
+
+  -- mapping
+
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f2) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f7) Nothing
+
+    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
+
+    -- example lam_xy2 Nothing
+    --extra test, term that doesn't type check leads to empty list
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> [Expr] -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has a top choice " ++ show expected) $ do
+                topchoice term tenv `shouldBe` expected
+
+
+
 test_migrate :: Spec
 test_migrate = describe "max" $ do
     
-    --term1
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tdyn "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tdyn "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam Tdyn "x" appx)
-
-    let max_x_true = (App (Vv "x") (Vb True))
-    let max_my_succ = (App (Vv "succ") x_true)
-    let max_my_succ2 = (App (Vv "succ") x_4)
-    let max_lam_z = (Lam Tint "z" (Vb True))
-    let max_first_app = (App max_lam_z max_my_succ)
-    let max_lam_y = (Lam Tint "y" max_first_app)
-    let max_appx  = (App max_lam_y max_my_succ2)
-    let max_final = (Lam (Tdyn ~> Tint) "x" max_appx)
-    
-
-    --term 2
-    let my_add = (App (App (Vv "+") x_4) x_true)
-    let my_lam = (Lam (Tdyn) "x" my_add)
-    let my_lam_max = (Lam (Tdyn ~> Tint) "x" my_add)
-
-
-    --term 3 (infinite lattice with a maximal migration)
-    let app_y = (Lam Tdyn "y" (Vv "x"))
-    let app_x = (App app_y (Vv "x"))
-    let app_xx = (App app_x (Vv "x"))
-    let lam = (Lam Tdyn "x" app_xx)
-
-
-    let app_y_max = (Lam Tint "y" (Vv "x"))
-    let app_x_max = (App app_y_max (Vv "x"))
-    let app_xx_max = (App app_x_max (Vv "x"))
-    let lam_max = (Lam Tdyn "x" app_xx_max)
-
-
-    --a single function application
-    let simple_app = (App (Lam Tdyn "x" (Vv "x")) (Vi 4))
-    let simple_app_max = (App (Lam Tint "x" (Vv "x")) (Vi 4))
-
-
-    --term with many applications
-    let app_yxx = (App (Vv "succ") (App (App (Vv "y") (Vv "x")) (Vv "x")))
-    let lam_xy = (Lam Tdyn "x" (Lam Tdyn "y" app_yxx))
-
-
-
-    --term with no maximal migration
-    let self_application = (Lam Tdyn "x" (App (Vv "x") (Vv "x")))
-
-    let app_yxx2 = (App (Vv "succ") (App  (Vv "y") (App (Vv "x") (Vv "x"))))
-    let lam_xy2 = (Lam Tdyn "x" (Lam Tdyn "y" app_yxx2))
-
-
-
-    let app_xx_plus_xx = (App (Vv "x") (Vv "x"))
-    let lam_xx_plus_xx = (Lam Tdyn "x" (App (App (Vv "+") app_xx_plus_xx) 
-                                                          app_xx_plus_xx))
-
-
     example lam_xx_plus_xx Nothing
     example final (Just max_final)
     example my_lam (Just my_lam_max)
@@ -258,7 +278,16 @@ test_migrate = describe "max" $ do
 
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) (Just (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
     example (App (Lam Tint "x" (Vv "x")) (Vb True)) Nothing
+   
 
+  -- mapping
+
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f2) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f7) Nothing
 
     -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
 
@@ -276,21 +305,62 @@ test_migrate = describe "max" $ do
                 closestMaximalMigration term tenv `shouldBe` expected
 
 
+
+
+test_migrate_large :: Spec
+test_migrate_large = describe "max" $ do
+    
+    example lam_term_1 Nothing
+    example app_term_2 Nothing
+    example (make_mapping f8) Nothing
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Maybe Expr -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
+                closestMaximalMigration_4 term tenv `shouldBe` expected
+
+
+test_migrate_fpaper :: Spec
+test_migrate_fpaper = describe "NP hard example" $ do
+    
+    example (make_mapping fpaper) True
+
+  -- mapping
+
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f2) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f4) Nothing
+    -- example (make_mapping f1) Nothing
+    -- example (make_mapping f7) Nothing
+
+    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
+
+    -- example lam_xy2 Nothing
+    --extra test, term that doesn't type check leads to empty list
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Bool -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has a maximal migration " ++ show (closestMaximalMigration term tenv)) $ do
+                True `shouldBe` True
+
+
+
 test_migration_limit :: Spec
 test_migration_limit = describe "migration limit" $ do
 
 
     --infinite lattice maximal migration
     let identity = (Lam Tdyn "x" (Vv "x"))
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tint "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tint "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam (Tdyn ~> Tint) "x" appx)
 
     let my_succ_app2 = (App (Vv "succ") x_true)
     let my_succ_app3 = (App (Vv "x") my_succ_app2)
@@ -315,7 +385,7 @@ test_migration_limit = describe "migration limit" $ do
     example (Lam Tdyn "y" (App (App (Vv "y") (Vi 0)) (Vi 0))) 2
     example lam_xyy 2
     example identity 0
-    example final 10
+    example max_final 10
     example my_succ 4
     example self_application 1
     example (App self_application self_application) 3
@@ -324,6 +394,10 @@ test_migration_limit = describe "migration limit" $ do
     example (App identity (Vi 4)) 1
     example evil_example 4
     example lam_xy2 4
+    -- example (make_mapping f2) 0
+    -- example (make_mapping f3) 0
+    -- example (make_mapping f4) 0
+    -- example (make_mapping f5) 0
 
     it "should handle x" $ do
         "x" `shouldBe` "x"
@@ -388,6 +462,10 @@ test_const_gen = describe "constraint generation" $ do
                     (CVar 3) .= (CVar 1),
                     (CVar 4) .= (CVar 1)]
 
+    -- example succ_app []
+
+    -- example (make_mapping f1) []
+
 
     -- example evil []
 
@@ -409,6 +487,7 @@ test_simPrec = describe "SimPrec" $ do
 
     let constraints = (constraint succ_lam_true tenv)
     let constraints_ex2 = (constraint lam_xx tenv)
+    let constraints_map1 = (constraint (make_mapping f1) tenv)
 
     let c2 = ((CVar 2), [(CInt .~> CInt) .<= (CVar 0),
                          (CBool .~> CBool) .<= (CVar 1), 
@@ -428,9 +507,9 @@ test_simPrec = describe "SimPrec" $ do
                             (CVar 1) .= ((CVar 5) .~> (CVar 6)),
                             (CVar 5) .= CBool,
                             (CVar 6) .= CBool ])
-    
 
-
+    -- example constraints_map1 (fst constraints, (delete (CDyn .<= (CVar 1)) 
+                                              --    (snd constraints)))
     -- example evil_constraints (CVar 0, [])
 
     where 
@@ -451,11 +530,27 @@ test_simMatch = describe "simMatch" $ do
     example (Lam Tdyn "x" (Vv "x")) tenv [[CVar 0 .= ((CVar 1) .~> (CVar 2)),
                                            CVar 2 .= CVar 1]]
 
+    example2 [CVar 0 .= ((CVar 1) .~> (CVar 2)),CVar 2 .= CVar 1]
+        [[CVar 0 .= ((CVar 1) .~> (CVar 2)),CVar 2 .= CVar 1]]
+
+    example2 [(CVar 5) .|> ((CVar 10) .~> (CVar 4))]
+        [ [(CVar 5) .= ((CVar 10) .~> (CVar 4))]
+        , [CVar 5 .= CDyn, CVar 10 .= CDyn, CVar 4 .= CDyn]
+        ]
+
+
+    -- example (make_mapping f1) tenv []
+
     where 
         example :: Expr  -> Env -> [[Constraint]] -> Spec
         example expr env expected = do 
             it ("sees that " ++ show expr ++ " simplifies matching to " ++ show expected) $ do
                 (compose_upto_match expr env)`shouldBe` expected
+
+        example2 :: [Constraint]  -> [[Constraint]] -> Spec
+        example2 con expected = do 
+            it ("sees that " ++ show con ++ " simplifies matching to " ++ show expected) $ do
+                (simMatch con)`shouldBe` expected
 
 
 -- test_unify2n :: Spec
@@ -612,6 +707,7 @@ test_composition = describe "composes upto consistency to" $ do
     example app_xy_succ_true [Just [CVar 4 .~ CInt,CVar 4 .~ CVar 8,
                                          CVar 8 .~ CBool]]
 
+    -- example (make_mapping f1) [Nothing]
 
     -- example evil [Nothing]
 
@@ -723,6 +819,7 @@ test_boundness  = describe "boundedness for constraints" $ do
     let i_n = (filter_isjust (compose_all (Lam Tdyn "x" (Vv "x")) tenv)) 
 
 
+
     example [c1] False
     example [c2] True
     example [c3] False
@@ -747,64 +844,6 @@ test_finitness  = describe "check finitness" $ do
     it "should handle x" $ do
         "x" `shouldBe` "x"
 
-
- --term1
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tdyn "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tdyn "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam Tdyn "x" appx)
-
-    let max_x_true = (App (Vv "x") (Vb True))
-    let max_my_succ = (App (Vv "succ") x_true)
-    let max_my_succ2 = (App (Vv "succ") x_4)
-    let max_lam_z = (Lam Tint "z" (Vb True))
-    let max_first_app = (App max_lam_z max_my_succ)
-    let max_lam_y = (Lam Tint "y" max_first_app)
-    let max_appx  = (App max_lam_y max_my_succ2)
-    let max_final = (Lam (Tdyn ~> Tint) "x" max_appx)
-    
-
-    --term 2
-    let my_add = (App (App (Vv "+") x_4) x_true)
-    let my_lam = (Lam (Tdyn) "x" my_add)
-    let my_lam_max = (Lam (Tdyn ~> Tint) "x" my_add)
-
-
-    --term 3 (infinite lattice with a maximal migration)
-    let app_y = (Lam Tdyn "y" (Vv "x"))
-    let app_x = (App app_y (Vv "x"))
-    let app_xx = (App app_x (Vv "x"))
-    let lam = (Lam Tdyn "x" app_xx)
-
-
-    let app_y_max = (Lam Tint "y" (Vv "x"))
-    let app_x_max = (App app_y_max (Vv "x"))
-    let app_xx_max = (App app_x_max (Vv "x"))
-    let lam_max = (Lam Tdyn "x" app_xx_max)
-
-
-    --a single function application
-    let simple_app = (App (Lam Tdyn "x" (Vv "x")) (Vi 4))
-    let simple_app_max = (App (Lam Tint "x" (Vv "x")) (Vi 4))
-
-
-    --term with many applications
-    let app_yxx = (App (Vv "succ") (App (App (Vv "y") (Vv "x")) (Vv "x")))
-    let lam_xy = (Lam Tdyn "x" (Lam Tdyn "y" app_yxx))
-
-
-
-    --term with no maximal migration
-    let self_application = (Lam Tdyn "x" (App (Vv "x") (Vv "x")))
-
- 
-
-
     example final True
     example my_lam True
     example lam False
@@ -820,8 +859,12 @@ test_finitness  = describe "check finitness" $ do
                 (App(Lam Tdyn "y" (Vv "y"))
                     (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) True
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
-    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
+    example lam_term_1 False
+    example app_term_2 False
 
+
+    -- scalability
+    -- example (make_mapping f1) False
 
     where 
         example :: Expr -> Bool -> Spec
@@ -851,33 +894,24 @@ test_lam_yxx= describe "find specific maximal migration" $ do
                  (elem expr2 (findAllMaximalMigrationsN 5 expr1  tenv)) `shouldBe` True
 
 
+-- test_evil :: Spec
+-- test_evil= describe "find specific maximal migration" $ do
+    
+--     example evil_example []  
+   
+--     it "should handle x" $ do
+--         "x" `shouldBe` "x"
+
+--     where 
+--         example :: Expr  -> [Expr] -> Spec
+--         example expr expected = do 
+--             it ("sees that " ++ show expr ++ " has migrations"
+--                                        ++ show expected) $ do
+--                 findAllMaximalMigrations expr tenv `shouldBe` expected
+
 test_mult_migrate :: Spec
 test_mult_migrate = describe "find multiple migrations" $ do
     
-
-    --term1
-    let x_4 = (App (Vv "x") (Vi 4))
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ = (App (Vv "succ") x_true)
-    let my_succ2 = (App (Vv "succ") x_4)
-    let lam_z = (Lam Tdyn "z" (Vb True))
-    let first_app = (App lam_z my_succ)
-    let lam_y = (Lam Tdyn "y" first_app)
-    let appx  = (App lam_y my_succ2)
-    let final = (Lam Tdyn "x" appx)
-    
-
-    --term 2
-    let my_add = (App (App (Vv "+") x_4) x_true)
-    let my_lam = (Lam (Tdyn) "x" my_add)
-    let my_lam_max = (Lam (Tdyn ~> Tint) "x" my_add)
-
-
-    --term 3 (infinite lattice with a maximal migration)
-    let app_y = (Lam Tdyn "y" (Vv "x"))
-    let app_x = (App app_y (Vv "x"))
-    let app_xx = (App app_x (Vv "x"))
-    let lam = (Lam Tdyn "x" app_xx)
 
     --migrations at level 3:
     let app_y1 = (Lam Tint "y" (Vv "x"))
@@ -892,22 +926,13 @@ test_mult_migrate = describe "find multiple migrations" $ do
     let lam2 = (Lam Tdyn "x" app_xx2)
 
 
-    --term 5 a single function application
-    let simple_app = (App (Lam Tdyn "x" (Vv "x")) (Vi 4))
-
-
-    --term 6 term with many applications
-    let app_yxx = (App (Vv "succ") (App (App (Vv "y") (Vv "x")) (Vv "x")))
-    let lam_xy = (Lam Tdyn "x" (Lam Tdyn "y" app_yxx))
-
-
-
-    --term 7 with no maximal migration
-    let self_application = (Lam Tdyn "x" (App (Vv "x") (Vv "x")))
-
-
     example 2 simple_app [(App (Lam Tint "x" (Vv "x")) (Vi 4))]
     example 3 lam [lam1, lam2]
+    example 3 (make_mapping f8) []
+    -- example 3 evil_example []
+    -- example 9 self_application []
+
+    -- example 2 (make_mapping [c1, c2]) []
 
    
     it "should handle x" $ do
@@ -918,102 +943,10 @@ test_mult_migrate = describe "find multiple migrations" $ do
         example lvl term expected = do 
             it ("sees that at level " ++ show lvl ++ " "  ++ 
                 show term ++ " has migrations " ++ show expected) $ do
-                findAllMaximalMigrationsN 3 term  tenv `shouldBe` expected
-
-
-
---ex1
-succ_lam_true =  (Lam Tdyn "x" (App (Vv "x") 
-                 (App (Vv "succ") (App (Vv "x") (Vb True)))))
-
-
-succ_lam_true_max = (Lam (Tdyn ~> Tint) "x" (App (Vv "x") 
-                 (App (Vv "succ") (App (Vv "x") (Vb True)))))
-
-lam_succ_cnst =(compose_upto_match succ_lam_true tenv)
-const_eq_lam_0 = lam_succ_cnst !! 0
-lam_succ_unify0 =  (pleaseUnify const_eq_lam_0)
-
-const_eq_lam_5 = lam_succ_cnst !! 5
-lam_succ_unify5 =  (pleaseUnify const_eq_lam_5)
-
-
---ex2
-lam_xx = (Lam Tdyn "x" (App (Vv "x") (Vv "x")))
-lam_xx_cnst = (compose_upto_match lam_xx tenv)
-const_eq_lam_xx_0 = lam_xx_cnst !! 0
-lam_xx_unify0 = (pleaseUnify const_eq_lam_xx_0)
- 
---ex3
-app_xy_succ_true = (App (Vv "succ") 
-                    (App (Lam Tdyn "y" (Vv "y")) 
-                      (App (Lam Tdyn "x" (Vv "x")) (Vb True))))  
-
-app_xy_succ_true_cnst =(compose_upto_match app_xy_succ_true tenv)
-app_xy_succ_true_cnst_0 = app_xy_succ_true_cnst !! 0
-app_xy_succ_true_cnst_unify0 = (pleaseUnify app_xy_succ_true_cnst_0)
+                findAllMaximalMigrationsN lvl term  tenv `shouldBe` expected
 
 
 
 
-evil2 = (Lam  Tdyn "y" (Vv "x"))
-evil1 = (App evil2 (Vv "x"))
-evil0 = (App evil1 (Vv "x"))
-evil = (Lam Tdyn "x" evil0)
 
-evil2_m = (Lam  Tint "y" (Vv "x"))
-evil1_m = (App evil2_m (Vv "x"))
-evil0_m = (App evil1_m (Vv "x"))
-evil_m = (Lam Tdyn "x" evil0_m)
-
-evil_constraints = (constraint evil tenv)
-evil_simPrec = (simPrec evil_constraints)
-evil_simMatch = (simMatch (snd evil_simPrec))
-
-
-
-succ_lam = (Lam Tdyn "x" (App (Vv "succ") (Vv "x")))
-
-succ_app = (App (Vv "succ") (App (Lam Tdyn "y" (Vv "y")) 
-           (App (Lam Tdyn "x" (Vv "x")) (Vb True)) ) )
-
-lam_xyy = 
-    Lam Tdyn "x" (Lam Tdyn "y" app_yxx)
-    where
-        app_yxx = (App (App (Vv "y") (Vv "x")) (Vv "x"))
-
-lam_xyy_max =
-    Lam Tdyn "x" (Lam (Tint ~> Tbool ~> Tint) "y" app_yxx)
-    where
-        app_yxx = (App (App (Vv "y") (Vv "x")) (Vv "x"))
-
-
-lam_xyy_max2 =
-    Lam Tint "x" (Lam (Tint ~> Tint~> Tint) "y" app_yxx)
-    where
-        app_yxx = (App (App (Vv "y") (Vv "x")) (Vv "x"))
-
-evil_example = 
-    (Lam Tdyn "x"
-        (App ((Lam (Tdyn) "f" 
-                    (App (App const (Vv "f"))
-                        (App (Vv "f") (Vv "x")))))
-            (Lam Tdyn "z" (Vi 1))
-        ))
-
-
-    where 
-        const = (Lam Tdyn "x" (Lam Tdyn "y" (Vv "x")))   
-
-
-evil_example_max = 
-    (Lam Tint "x"
-        (App ((Lam (Tdyn) "f" 
-                    (App (App const (Vv "f"))
-                        (App (Vv "f") (Vv "x")))))
-            (Lam Tint "z" (Vi 1))
-        ))
-
-    where 
-        const = (Lam Tint "x" (Lam Tint "y" (Vv "x")))   
 

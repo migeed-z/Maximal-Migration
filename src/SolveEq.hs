@@ -245,10 +245,11 @@ boundedness cnst = not (elem False
                         cnst_set <- cnst]) 
 
 check_finitness :: Expr -> Env -> Bool
-check_finitness e env = (boundedness (filter_isjust (compose_all e env)) ) &&
+check_finitness e env = (boundedness (filter_isjust c)) &&
                         (new_check (collect_all_vars (snd (constraint e env))) 
-                        [collect_all_vars_rhs s | s <- (filter_isjust (compose_all e env))]
-                        (check_nothing (check_finitness_all e env) (compose_all e env)))
+                        [collect_all_vars_rhs s | s <- (filter_isjust c)]
+                        (check_nothing (check_finitness_all e env) c))
+                where c = (compose_all e env)
 
 
 

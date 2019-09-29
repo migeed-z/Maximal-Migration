@@ -52,6 +52,13 @@ match_on_var x typeofx term env =
         term -> card typeofx  --x did not occur in the body so just take the type environment since we know it type-checks. 
 
 
+
+-- count_apps_abs :: Expr -> Int
+-- count_apps_abs (Vi n) = 0
+-- count_apps_abs (Vb b) = 0
+-- count_apps_abs (Vv x) = 0
+-- count_apps_abs 
+
 -- type_test_succ = do
 --     let identity = (Lam Tdyn "x" (Vv "x"))
 --     let x_4 = (App (Vv "x") (Vi 4))
