@@ -17,7 +17,7 @@ import SolveEq
 import Data.Either
 import NPHard
 import Formula
-import Data.Maybe (fromJust)
+import Data.Maybe 
 import qualified Data.Map as Map
 
 main :: IO ()
@@ -26,29 +26,36 @@ main = test
 test :: IO ()
 test = hspec $ do
     test_maximality
-    test_typechecking
-    test_migrate
-    test_mult_migrate
-    test_the_next_terms
-    test_migration_limit
-    test_get_type
-    test_const_gen
-    test_simPrec
-    test_simMatch
-    test_pleaseUnify
-    test_filter_consist
-    test_apply_unifier
-    test_simCon
-    test_composition
-    test_filter_isJust
-    test_boundedness_sing
-    test_boundnessOneSet
-    test_boundness
-    test_finitness
+
     test_topchoice
-    test_lam_yxx
+    test_finitness
+    test_has_max
+    test_has_max_large
+    test_migrate
     test_migrate_large
+    test_lam_yxx
     test_migrate_fpaper
+
+
+
+    -- test_typechecking
+    -- test_mult_migrate
+    -- test_the_next_terms
+    -- test_migration_limit
+    -- test_get_type
+    -- test_const_gen
+    -- test_simPrec
+    -- test_simMatch
+    -- test_pleaseUnify
+    -- test_filter_consist
+    -- test_apply_unifier
+    -- test_simCon
+    -- test_composition
+    -- test_filter_isJust
+    -- test_boundedness_sing
+    -- test_boundnessOneSet
+    -- test_boundness
+    -- test_migrate_fpaper
     -- test_evil
 
 
@@ -151,42 +158,36 @@ test_typechecking = describe "type checking" $ do
 
 --the singleton checker
 test_maximality :: Spec
-test_maximality = describe "maximality" $ do
+test_maximality = describe "Singleton check" $ do
     
     --main tests
-    example lam_xx_plus_xx False
-    example final False
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    example succ_lam_true False
     example my_lam False
     example simple_app False
-    example lam_xyy False
-    example evil_example False
-    example (Lam Tdyn "x" (Vv "x")) False
-    example self_application False
-    example succ_lam_true False
-    example evil False
-    example (Lam Tdyn "x" (App (Vv "x") my_succ)) False
-    example (App (Vv "succ") 
-            (App(Lam Tdyn "y" (Vv "y"))
+    example (App (Vv "succ") (App(Lam Tdyn "y" (Vv "y"))
                 (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) False
-
-    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
-    example (App (Lam Tint "x" (Vv "x")) (Vb True)) True
+    example (Lam Tdyn "x" (Vv "x")) False
+    example lam_xyy False
+    example evil False
+    example evil_example False
+    example self_application False
     example lam_term_1 False
     example app_term_2 False
-    example (make_mapping fpaper) False
-    example (make_mapping f8) False
+    -- example (make_mapping fpaper) False
+    -- example (make_mapping f8) False
 
 
 
     --scalability
-    example (make_mapping f1) False
-    example (make_mapping f2) False
-    example (make_mapping f3) False
-    example (make_mapping f4) False
-    example (make_mapping f5) False
-    example (make_mapping f6) False
-    example (make_mapping f7) False
-    example (make_mapping f8) False
+    -- example (make_mapping f1) False
+    -- example (make_mapping f2) False
+    -- example (make_mapping f3) False
+    -- example (make_mapping f4) False
+    -- example (make_mapping f5) False
+    -- example (make_mapping f6) False
+    -- example (make_mapping f7) False
+    -- example (make_mapping f8) False
 
 
 
@@ -197,38 +198,53 @@ test_maximality = describe "maximality" $ do
     where 
         example :: Expr -> Bool -> Spec
         example term expected = do 
-            it ("sees that " ++ show term ++ " is maximal if " ++ show expected) $ do
+            it ("sees that " ++ show term ++ " is singleton? = " ++ show expected) $ do
                 ismaximal term tenv `shouldBe` expected
 
 
 
 
 test_topchoice :: Spec
-test_topchoice = describe "top choice" $ do
+test_topchoice = describe "Top choice check" $ do
     
-    example lam_xx_plus_xx []
-    example final [max_final]
-    example my_lam [my_lam_max]
-    example simple_app [simple_app_max]
-    example lam_xyy []
-    example evil_example []
-    example (Lam Tdyn "x" (Vv "x")) []
-    example self_application []
-    example succ_lam_true [succ_lam_true_max]
-    example evil []
-    example (Lam Tdyn "x" (App (Vv "x") my_succ))  [(Lam (Tdyn ~> Tint) "x" (App (Vv "x") my_succ))]
-    example (App (Vv "succ") 
-            (App(Lam Tdyn "y" (Vv "y"))
-                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) [(App (Vv "succ") 
-            (App(Lam Tint "y" (Vv "y"))
-                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))), (App (Vv "succ") 
-            (App(Lam Tdyn "y" (Vv "y"))
-                (App (Lam Tbool "x" (Vv "x"))(Vb True))))]
 
-    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) [(Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x"))))]
-    example (App (Lam Tint "x" (Vv "x")) (Vb True)) []
-    example lam_term_1 []
-    example app_term_2 []
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    example succ_lam_true  True
+    example my_lam True
+    example simple_app True
+    example (App (Vv "succ") (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) False
+    example (Lam Tdyn "x" (Vv "x")) False
+    example lam_xyy False
+    example evil False
+    example evil_example False
+    example self_application False
+    example lam_term_1 False
+    example app_term_2 False
+
+    -- example lam_xx_plus_xx []
+    -- example final [max_final]
+    -- example my_lam [my_lam_max]
+    -- example simple_app [simple_app_max]
+    -- example lam_xyy []
+    -- example evil_example []
+    -- example (Lam Tdyn "x" (Vv "x")) []
+    -- example self_application []
+    -- example succ_lam_true [succ_lam_true_max]
+    -- example evil []
+    -- example (Lam Tdyn "x" (App (Vv "x") my_succ))  [(Lam (Tdyn ~> Tint) "x" (App (Vv "x") my_succ))]
+    -- example (App (Vv "succ") 
+    --         (App(Lam Tdyn "y" (Vv "y"))
+    --             (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) [(App (Vv "succ") 
+    --         (App(Lam Tint "y" (Vv "y"))
+    --             (App (Lam Tdyn "x" (Vv "x"))(Vb True)))), (App (Vv "succ") 
+    --         (App(Lam Tdyn "y" (Vv "y"))
+    --             (App (Lam Tbool "x" (Vv "x"))(Vb True))))]
+
+    -- example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) [(Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x"))))]
+    -- example (App (Lam Tint "x" (Vv "x")) (Vb True)) []
+    -- example lam_term_1 []
+    -- example app_term_2 []
 
   -- mapping
 
@@ -249,51 +265,80 @@ test_topchoice = describe "top choice" $ do
         "x" `shouldBe` "x"
 
     where 
-        example :: Expr -> [Expr] -> Spec
+        example :: Expr -> Bool -> Spec
         example term expected = do 
-            it ("sees that " ++ show term ++ " has a top choice " ++ show expected) $ do
-                topchoice term tenv `shouldBe` expected
+            it ("sees that " ++ show term ++ " has a top choice? =  " ++ show expected) $ do
+                (length(topchoice term tenv) == 1) `shouldBe` expected
 
+
+
+
+
+
+test_has_max :: Spec
+test_has_max = describe "Maximality check" $ do
+    
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    example succ_lam_true  True
+    example my_lam True
+    example simple_app True
+    example (App (Vv "succ") (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) True
+    example (Lam Tdyn "x" (Vv "x")) True
+    example lam_xyy True
+    example evil True
+    example evil_example True
+    example self_application False
+    example (make_mapping fpaper) True
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Bool -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
+                isJust (closestMaximalMigration term tenv) `shouldBe` expected
+
+
+test_has_max_large :: Spec
+test_has_max_large = describe " " $ do
+
+    example lam_term_1 False
+    example app_term_2 False
+    example (make_mapping f8) False
+   
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Bool -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
+                isJust (closestMaximalMigration_3 term tenv) `shouldBe` expected
 
 
 test_migrate :: Spec
-test_migrate = describe "max" $ do
+test_migrate = describe "Show migrations (fig 6)" $ do
     
-    example lam_xx_plus_xx Nothing
-    example final (Just max_final)
-    example my_lam (Just my_lam_max)
-    example simple_app (Just simple_app_max)
-    example lam_xyy (Just lam_xyy_max)
-    example evil_example (Just evil_example_max)
-    example (Lam Tdyn "x" (Vv "x")) (Just (Lam Tint "x" (Vv "x")))
-    example self_application Nothing
-    example succ_lam_true (Just succ_lam_true_max)
-    example evil (Just evil_m)
-    example (Lam Tdyn "x" (App (Vv "x") my_succ))  (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") my_succ)))
-    example (App (Vv "succ") 
-            (App(Lam Tdyn "y" (Vv "y"))
-                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) (Just (App (Vv "succ") 
-            (App(Lam Tint "y" (Vv "y"))
-                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))))
+
 
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) (Just (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
-    example (App (Lam Tint "x" (Vv "x")) (Vb True)) Nothing
-   
-
-  -- mapping
-
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f2) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f7) Nothing
-
-    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
-
-    -- example lam_xy2 Nothing
-    --extra test, term that doesn't type check leads to empty list
-
+    example succ_lam_true  (Just succ_lam_true_max)
+    example my_lam (Just my_lam_max)
+    example simple_app (Just simple_app_max)
+    example (App (Vv "succ") (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True))))  
+            (Just (App (Vv "succ") (App(Lam Tint "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))))
+    example (Lam Tdyn "x" (Vv "x"))  (Just (Lam Tint "x" (Vv "x")))
+    example lam_xyy (Just lam_xyy_max)
+    example evil (Just evil_m)
+    example evil_example (Just evil_example_max)
+    example self_application Nothing
 
     it "should handle x" $ do
         "x" `shouldBe` "x"
@@ -306,9 +351,8 @@ test_migrate = describe "max" $ do
 
 
 
-
 test_migrate_large :: Spec
-test_migrate_large = describe "max" $ do
+test_migrate_large = describe "Show migrations (fig 6) Large prog" $ do
     
     example lam_term_1 Nothing
     example app_term_2 Nothing
@@ -839,28 +883,40 @@ test_boundness  = describe "boundedness for constraints" $ do
 
 
 test_finitness :: Spec
-test_finitness  = describe "check finitness" $ do
+test_finitness  = describe "Finitness check" $ do
     
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
-
-    example final True
-    example my_lam True
-    example lam False
-    example simple_app True
-    example lam_xyy False
-    example evil_example False
-    example (Lam Tdyn "x" (Vv "x")) False
-    example self_application False
-    example succ_lam_true True
-    example evil False
-    example (Lam Tdyn "x" (App (Vv "x") my_succ)) True
-    example (App (Vv "succ") 
-                (App(Lam Tdyn "y" (Vv "y"))
-                    (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) True
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    example succ_lam_true True
+    example my_lam True
+    example simple_app True
+    example (App (Vv "succ") (App(Lam Tdyn "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) True
+    example (Lam Tdyn "x" (Vv "x")) False
+    example lam_xyy False
+    example evil False
+    example evil_example False
+    example self_application False
     example lam_term_1 False
     example app_term_2 False
+
+
+    -- example final True
+    -- example my_lam True
+    -- example lam False
+    -- example simple_app True
+    -- example lam_xyy False
+    -- example evil_example False
+    -- example (Lam Tdyn "x" (Vv "x")) False
+    -- example self_application False
+    -- example succ_lam_true True
+    -- example evil False
+    -- example (Lam Tdyn "x" (App (Vv "x") my_succ)) True
+    -- example (App (Vv "succ") 
+    --             (App(Lam Tdyn "y" (Vv "y"))
+    --                 (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) True
+    -- example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
+    -- example lam_term_1 False
+    -- example app_term_2 False
 
 
     -- scalability
@@ -869,7 +925,7 @@ test_finitness  = describe "check finitness" $ do
     where 
         example :: Expr -> Bool -> Spec
         example expr expected = do 
-            it ("sees that " ++ show expr ++ " is finite = "
+            it ("sees that " ++ show expr ++ " is finite? = "
                                        ++ show expected) $ do
                 check_finitness expr tenv `shouldBe` expected
 
