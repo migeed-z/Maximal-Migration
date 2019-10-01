@@ -6,7 +6,9 @@ This artifact is for out POPL 2020 submission.
 ------------
 
 ### Step 0: VM
-You can download a copy of our VM which has all the requirements installed, as well as the required code. The OCL file is located here:
+You can download a copy of our VM which has all the requirements installed, as well as the required code. 
+
+The Folder is named 
 
 ### Step 1: Dependencies
 
@@ -24,9 +26,10 @@ This creates a root directory called Maximal-Migration in your current working d
 
 ### Step 3: Run all the tests
 ------------
-Go to the root directory and run:
-- `stack build`
-- `stack test/Test.hs`
+- If you downloaded the VM, open the terminal and run: `cd Maximal-Migration`
+- If you downloaded the repo, go to the root directory 
+- Run `stack build`
+- Run `stack test/Test.hs`
 
 This will run all algorithms on the examples mentioned in the paper so we can verify their correctness. Performance will be evaluated using another command. One general note about these tests is that the symbol * in the artifact stands for `dyn`. So `λx : * . x (succ x)` is the same as `λx : dyn . x (succ x)` and also the same as `λx . x (succ x)`  (because * stands for the unknown type). 
 Throughout the artifact, we stick through the first representation only, but the other two representations appear in the paper.
