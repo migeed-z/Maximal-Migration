@@ -8,8 +8,10 @@ This artifact is for out POPL 2020 submission.
 You can download a copy of our VM which has all the requirements installed, as well as the required code. The OCL file is located here:
 
 ### Step 1: Dependencies
-Another option is to install the dependencies by following these steps:
-(these steps are for Ubuntu)
+
+Another option is to install the dependencies by following these steps (these steps are for Ubuntu):
+
+------------
  - Go to the terminal and run `sudo apt-get install haskell-platform`
  - Then install stack by running `curl -sSL https://get.haskellstack.org/ | sh`
  - Install the test library by running `stack install hspec`
@@ -20,8 +22,10 @@ Another option is to install the dependencies by following these steps:
 This creates a root directory called Maximal-Migration in your current working directory.
 
 ### Step 3: Run all the tests
-- Go to the root directory and run:
-`stack test/Test.hs`
+------------
+Go to the root directory and run:
+- `stack build`
+- `stack test/Test.hs`
 
 This will run all algorithms on the examples mentioned in the paper so we can verify their correctness. Performance will be evaluated using another command. One general note about these tests is that the symbol * in the artifact stands for `dyn`. So `λx : * . x (succ x)` is the same as `λx : dyn . x (succ x)` and also the same as `λx . x (succ x)`  (because * stands for the unknown type). 
 Throughout the artifact, we stick through the first representation only, but the other two representations appear in the paper.
