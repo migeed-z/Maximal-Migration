@@ -1,4 +1,5 @@
 
+
 # What is Decidable about Gradual Types?
 This artifact is for out POPL 2020 submission.
 
@@ -17,7 +18,7 @@ Another option is to install the dependencies by following these steps (these st
  - Install the test library by running `stack install hspec`
  - Install the performance tool by running `stack install criterion`
  
-### Step 1: GitHub repository
+### Step 2: GitHub repository
  If you did not use the VM, then  Clone this repository:  https://github.com/migeed-z/Maximal-Migration 
 This creates a root directory called Maximal-Migration in your current working directory.
 
@@ -30,7 +31,7 @@ Go to the root directory and run:
 This will run all algorithms on the examples mentioned in the paper so we can verify their correctness. Performance will be evaluated using another command. One general note about these tests is that the symbol * in the artifact stands for `dyn`. So `λx : * . x (succ x)` is the same as `λx : dyn . x (succ x)` and also the same as `λx . x (succ x)`  (because * stands for the unknown type). 
 Throughout the artifact, we stick through the first representation only, but the other two representations appear in the paper.
 
-### Step 3: Verify Figure 4.
+### Step 4: Verify Figure 4.
 First, we want to verify the results which appear in Figure 4 in the paper. The figure summarizes four kinds of checks on 12 benchmarks.
 
 In the terminal, you will now see the output for each of the four checks on the 12 benchmarks in Figure 4, in the order they appear in the paper (except for the last check which we will discuss). Below is some sample output for each check. In all the results below, True corresponds to ✔ and False corresponds to ✕. 
@@ -67,7 +68,7 @@ The output below this corresponds to benchmarks 10-12 in Fig 4
 **Maximality check (benchmarks 11 &12) & NPHard**
 The output consists of 4 benchmarks. The first two are benchmarks 11 and 12 in the figure while the last two are the benchmark $E_{f2}$ from the paper, and the mapping generated from $f_8$ in section 7. We can see that $E_{f2}$ has a maximal migration and that the mapping from $f_8$ does not, since $f_8$ is unsatisfiable.
 
-### Step 4: Figure 6 results
+### Step 5: Figure 6 results
 We now verify the results in Figure 6. 
 
 In the terminal, we will see text that says: **Show migrations (fig 6)**
@@ -116,7 +117,7 @@ Here, we run the migration algorithm upto level 5 and collect all maximal migrat
 
 ------------
 
-### Step 7: NP Hardness examples
+### Step 6: NP Hardness examples
 We want to verify that the NP hardness example seen in section 6.3 has a maximal migration. 
 
 For this, read the part of the output which says:
@@ -124,7 +125,7 @@ For this, read the part of the output which says:
 **NP hard example**
 Below that line, you will see the proram and the corresponding maximal migration. For this, we have implemented a mapping function *make_mapping* in `NPHard.hs` which takes boolean formulas to programs.  A check is called on that program to verify that it is indeed a maximal migration.
 
-### Step 5: Exploring the lattice
+### Step 7: Exploring the lattice
 To run the maximality algorithm upto a given level in the lattice, uncomment the line of code that says 
 `    -- test_mult_migrate` in `test/Test.hs` then rerun the command:
 ` stack test/Test.hs`
@@ -140,6 +141,12 @@ When you run this test, the following output will be displayed:
       sees that at level 3 λx : * . (λy : * . x) x x has migrations [λx : * . (λy : int . x) x x,λx : * . (λy : bool . x) x x]
 
 Sample programs to run tests on can be found in` src/Examples.hs `. 
+
+### Step 8: Verify Fig 7
+You will see the check:
+**Typecheck (fig 7)**
+This will list all maximal benchmarks and their corresponding types. Figure 7 lists the programs *before* migration, and the types *after* migration. However, we have already verified that we find the maximal migrations correctly, so it remains to check that the types of those migrations correspond to those in figure 7,
+
 
 ### Step 8: Performance
 
@@ -203,3 +210,4 @@ Without report:
 For the group MLarge, we recommend running it for a longer time to ensure that each benchmark runs at least 100 times. For this, use the command
 
 `stack test/Performance.hs --output report.html -L 1000 MLarge`
+
