@@ -26,7 +26,6 @@ main = test
 test :: IO ()
 test = hspec $ do
     test_maximality
-
     test_topchoice
     test_finitness
     test_has_max
@@ -35,8 +34,8 @@ test = hspec $ do
     test_migrate_large
     test_lam_yxx
     test_migrate_fpaper
-
-
+    test_get_type
+    -- test_mult_migrate 
 
     -- test_typechecking
     -- test_mult_migrate
@@ -109,20 +108,22 @@ test_the_next_terms = describe "finding the next well typed terms" $ do
 
 
 test_get_type :: Spec
-test_get_type = describe "type checking" $ do
-    
-    let x_true = (App (Vv "x") (Vb True))
-    let my_succ_app2 = (App (Vv "succ") x_true)
-    let my_succ_app3 = (App (Vv "x") my_succ_app2)
-    let my_succ = (Lam Tdyn "x" my_succ_app3)
-
-    example my_succ tenv (Just (Tdyn ~> Tdyn))
-    -- example evil_example tenv Nothing
+test_get_type = describe "Typecheck (fig 7)" $ do
+    example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) (Just (Tdyn ~> Tdyn))
+    example succ_lam_true_max (Just ((Tdyn ~> Tint) ~> Tint))
+    example my_lam_max (Just ((Tdyn ~> Tint) ~> Tint))
+    example simple_app_max (Just Tint)
+    example (App (Vv "succ") (App(Lam Tint "y" (Vv "y"))
+                (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) (Just Tint)
+    example (Lam Tint "x" (Vv "x")) (Just (Tint ~> Tint))
+    example lam_xyy_max2 (Just (Tint ~> (Tint ~> Tint ~> Tint) ~> Tint)) 
+    example evil_m (Just (Tdyn ~> Tdyn))
+    example evil_example_max (Just (Tint ~> Tint))
 
     where 
-        example term env val = 
-            termit "the type is" term $ do
-                (typecheck term env) `shouldBe` val
+     example term expected = do 
+            it ("sees that " ++ show term ++ " has type = " ++ show (fromJust expected)) $ do
+                (typecheck term tenv) `shouldBe` expected
   
 test_typechecking :: Spec
 test_typechecking = describe "type checking" $ do
@@ -188,12 +189,6 @@ test_maximality = describe "Singleton check" $ do
     -- example (make_mapping f6) False
     -- example (make_mapping f7) False
     -- example (make_mapping f8) False
-
-
-
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
-
 
     where 
         example :: Expr -> Bool -> Spec
@@ -261,9 +256,6 @@ test_topchoice = describe "Top choice check" $ do
     --extra test, term that doesn't type check leads to empty list
 
 
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
-
     where 
         example :: Expr -> Bool -> Spec
         example term expected = do 
@@ -276,7 +268,7 @@ test_topchoice = describe "Top choice check" $ do
 
 
 test_has_max :: Spec
-test_has_max = describe "Maximality check" $ do
+test_has_max = describe "Maximality check (benchmarks 1-10)" $ do
     
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
     example succ_lam_true  True
@@ -289,7 +281,6 @@ test_has_max = describe "Maximality check" $ do
     example evil True
     example evil_example True
     example self_application False
-    example (make_mapping fpaper) True
 
 
     it "should handle x" $ do
@@ -299,20 +290,17 @@ test_has_max = describe "Maximality check" $ do
         example :: Expr -> Bool -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
-                isJust (closestMaximalMigration term tenv) `shouldBe` expected
+                isJust (closestMaximalMigration_5 term tenv) `shouldBe` expected
 
 
 test_has_max_large :: Spec
-test_has_max_large = describe " " $ do
+test_has_max_large = describe "Maximality check (benchmarks 10-12) & NPHard " $ do
 
     example lam_term_1 False
     example app_term_2 False
+    example (make_mapping fpaper) True
     example (make_mapping f8) False
    
-
-
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Expr -> Bool -> Spec
@@ -322,7 +310,7 @@ test_has_max_large = describe " " $ do
 
 
 test_migrate :: Spec
-test_migrate = describe "Show migrations (fig 6)" $ do
+test_migrate = describe "Show migrations (fig 6) benchmarks 1-10" $ do
     
 
 
@@ -340,26 +328,23 @@ test_migrate = describe "Show migrations (fig 6)" $ do
     example evil_example (Just evil_example_max)
     example self_application Nothing
 
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Expr -> Maybe Expr -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
-                closestMaximalMigration term tenv `shouldBe` expected
+                closestMaximalMigration_5 term tenv `shouldBe` expected
 
 
 
 test_migrate_large :: Spec
-test_migrate_large = describe "Show migrations (fig 6) Large prog" $ do
+test_migrate_large = describe "Show migrations (fig 6) 11,12 and f8" $ do
     
     example lam_term_1 Nothing
     example app_term_2 Nothing
     example (make_mapping f8) Nothing
 
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
+   
 
     where 
         example :: Expr -> Maybe Expr -> Spec
@@ -373,29 +358,13 @@ test_migrate_fpaper = describe "NP hard example" $ do
     
     example (make_mapping fpaper) True
 
-  -- mapping
 
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f2) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f7) Nothing
-
-    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
-
-    -- example lam_xy2 Nothing
-    --extra test, term that doesn't type check leads to empty list
-
-
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Expr -> Bool -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has a maximal migration " ++ show (closestMaximalMigration term tenv)) $ do
-                True `shouldBe` True
+                (ismaximal (fromJust (closestMaximalMigration term tenv)) tenv) `shouldBe` True
 
 
 
@@ -443,8 +412,6 @@ test_migration_limit = describe "migration limit" $ do
     -- example (make_mapping f4) 0
     -- example (make_mapping f5) 0
 
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Expr -> Int -> Spec
@@ -938,8 +905,6 @@ test_lam_yxx= describe "find specific maximal migration" $ do
     
     example lam_xyy lam_xyy_max2  True
    
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Expr -> Expr -> Bool -> Spec
@@ -990,9 +955,6 @@ test_mult_migrate = describe "find multiple migrations" $ do
 
     -- example 2 (make_mapping [c1, c2]) []
 
-   
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
 
     where 
         example :: Int -> Expr -> [Expr] -> Spec
