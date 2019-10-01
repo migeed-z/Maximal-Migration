@@ -148,7 +148,7 @@ You will see the check:
 This will list all maximal benchmarks and their corresponding types. Figure 7 lists the programs *before* migration, and the types *after* migration. However, we have already verified that we find the maximal migrations correctly, so it remains to check that the types of those migrations correspond to those in figure 7,
 
 
-### Step 8: Performance
+### Step 9: Performance
 
 To run the performance tests in Figure 5, run the command:
 
