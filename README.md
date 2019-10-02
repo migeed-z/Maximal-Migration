@@ -169,35 +169,35 @@ In both cases, the following will be displayed on the screen:
     std dev              9.265 ns   (7.906 ns .. 10.93 ns)
     variance introduced by outliers: 41% (moderately inflated)
 
-The above output  means we are running the Singleton check on the benchmark 1. We can see the mean, std dev. and other statistics. All benchmarks are marked 1 to 12 for each of our checks. They will all run in turn on all benchmarks.
+The above output  means we are running the Singleton check on the benchmark 1. We can see the mean, std dev. and other statistics. Our 12 benchmarks are marked 1 to 12 in the order they appear in Figure 4. We also have the two additional benchmarks from section 7. The SAT example is benchmark 13, and the program generated from f_8 is benchmark 14. Singleton, Finiteness and TopChoice run on the base 12 benchmarks and Maximality runs on all 14 benchmarks.
 
 Performance tests are separated into groups. Let us identify these groups.
 - Singleton
 Runs all singleton checks on our 12 benchmarks
 
 - Finiteness
-Runs finiteness checks on the first 9 (smaller) benchmarks
+Runs finiteness checks on the 9 (smaller) benchmarks 1-8 and 10
 
 - FLarge
-Runs finiteness checks on the last 3 (large) benchmarks
+Runs finiteness checks on the 3 (large) benchmarks 9, 11 and 12
 
 - TopChoice
-Runs topchoice checks on the first 9 (smaller) benchmarks
+Runs topchoice checks on the first 9 (smaller) benchmarks 
 
 - TCLarge
-Runs topchoice checks on the last 3 (large) benchmarks
+Runs topchoice checks on the last 3 (large) benchmarks 
 
 - Maximality
-Runs maximality checks on the first 9 (smaller) benchmarks upto level 5 of the lattice
+Runs maximality checks on the first 9 (smaller) benchmarks upto level 5 of the lattice 
 
 - MLarge
 Runs maximality checks on the last 3 (larger) benchmarks upto level 3 of the lattice
 
 - MappingSAT
-Measures the maximality check on the NPhardness SAT program
+Measures the maximality check on the NPhardness SAT program (benchmark 13)
 
 - MappingUNSAT
-Measures the maximality check on the NPhardness UNSAT program
+Measures the maximality check on the NPhardness UNSAT program (benchmark 14)
 
 You can run each group individually to see the performance and generate a separate html report. A report also lets you see how many times each benchmark was run.
 
