@@ -123,7 +123,7 @@ We want to verify that the NP hardness example seen in section 6.3 has a maximal
 
 For this, read the part of the output which says:
 
-**NP hard example**
+**NP hard example E_f**
 Below that line, you will see the proram and the corresponding maximal migration. For this, we have implemented a mapping function *make_mapping* in `NPHard.hs` which takes boolean formulas to programs.  A check is called on that program to verify that it is indeed a maximal migration.
 
 ### Step 7: Exploring the lattice
@@ -194,10 +194,10 @@ Runs maximality checks on the first 9 (smaller) benchmarks upto level 5 of the l
 Runs maximality checks on the last 3 (larger) benchmarks upto level 3 of the lattice
 
 - MappingSAT
-Measures the maximality check on the NPhardness SAT program (benchmark 13)
+Measures the maximality check on the NPhardness SAT program E_f (benchmark 13)
 
 - MappingUNSAT
-Measures the maximality check on the NPhardness UNSAT program (benchmark 14)
+Measures the maximality check on the NPhardness UNSAT program generated from f_8 (benchmark 14)
 
 You can run each group individually to see the performance and generate a separate html report. A report also lets you see how many times each benchmark was run.
 
