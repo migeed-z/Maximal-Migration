@@ -1,14 +1,12 @@
 
 
 # What is Decidable about Gradual Types?
-This artifact is for out POPL 2020 submission.
+This artifact is for our POPL 2020 submission.
 
 ------------
 
 ### Step 0: VM
 You can download a copy of our VM which has all the requirements installed, as well as the required code. 
-
-The Folder is named 
 
 ### Step 1: Dependencies
 
@@ -27,17 +25,17 @@ This creates a root directory called Maximal-Migration in your current working d
 ### Step 3: Run all the tests
 ------------
 - If you downloaded the VM, open the terminal and run: `cd Maximal-Migration`
-- If you downloaded the repo, go to the root directory 
+- If you downloaded the repo, then go to the root directory.
 - Run `stack build`
 - Run `stack test/Test.hs`
 
 This will run all algorithms on the examples mentioned in the paper so we can verify their correctness. Performance will be evaluated using another command. One general note about these tests is that the symbol * in the artifact stands for `dyn`. So `λx : * . x (succ x)` is the same as `λx : dyn . x (succ x)` and also the same as `λx . x (succ x)`  (because * stands for the unknown type). 
-Throughout the artifact, we stick through the first representation only, but the other two representations appear in the paper.
+Throughout the artifact, we use first representation only, but the other two representations appear in the paper. We will verify the results in figures 4,5,6 and 7 as well as two examples mentioned in section 7.
 
-### Step 4: Verify Figure 4.
+### Step 4: Verify Figure 4
 First, we want to verify the results which appear in Figure 4 in the paper. The figure summarizes four kinds of checks on 12 benchmarks.
 
-In the terminal, you will now see the output for each of the four checks on the 12 benchmarks in Figure 4, in the order they appear in the paper (except for the last check which we will discuss). Below is some sample output for each check. In all the results below, True corresponds to ✔ and False corresponds to ✕. 
+In the terminal, you will now see the output for each of the four checks on the 12 benchmarks in Figure 4, in the order they appear in the paper (except for the last check which we will discuss). Below is some sample output for each check. In all the results below, True corresponds to ✔ and False corresponds to ✕ in figure 4. 
 
 ------------
 **Singleton check**
@@ -69,9 +67,9 @@ You will see this output in the terminal:
 The output below this corresponds to benchmarks 10-12 in Fig 4
 
 **Maximality check (benchmarks 11 &12) & NPHard**
-The output consists of 4 benchmarks. The first two are benchmarks 11 and 12 in the figure while the last two are the benchmark $E_{f2}$ from the paper, and the mapping generated from $f_8$ in section 7. We can see that $E_{f2}$ has a maximal migration and that the mapping from $f_8$ does not, since $f_8$ is unsatisfiable.
+The output consists of 4 benchmarks. The first two are benchmarks 11 and 12 in the figure while the last two are the benchmark E_{f2} from the paper, and the mapping generated from f_8 in section 7. We can see that E_{f2} has a maximal migration and that the mapping from f_8 does not, since f_8 is unsatisfiable.
 
-### Step 5: Figure 6 results
+### Step 5: Verify Figure 6 
 We now verify the results in Figure 6. 
 
 In the terminal, we will see text that says: **Show migrations (fig 6)**
@@ -91,7 +89,7 @@ If a migration exists, it will be wrapped in a *Just* constructor. If no migrati
 
 ------------
 
-**Show migrations (fig 6) 11,12 and f8**
+**Show migrations (fig 6) 11,12 and f_8**
 
      sees that (λx : * . λy : * . y (x (λa : * . a)) (x (λb : * . λc : * . b))) (λd : * . d d) has a maximal migration Nothing
 
@@ -145,13 +143,13 @@ When you run this test, the following output will be displayed:
 
 Sample programs to run tests on can be found in` src/Examples.hs `. 
 
-### Step 8: Verify Fig 7
+### Step 8: Verify Figure 7
 You will see the check:
 **Typecheck (fig 7)**
 This will list all maximal benchmarks and their corresponding types. Figure 7 lists the programs *before* migration, and the types *after* migration. However, we have already verified that we find the maximal migrations correctly, so it remains to check that the types of those migrations correspond to those in figure 7,
 
 
-### Step 9: Performance
+### Step 9: Verify Figure 5
 
 To run the performance tests in Figure 5, run the command:
 
