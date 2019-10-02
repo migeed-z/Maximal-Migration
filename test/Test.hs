@@ -37,6 +37,8 @@ test = hspec $ do
     test_get_type
     -- test_mult_migrate 
 
+    --more tests:
+
     -- test_typechecking
     -- test_mult_migrate
     -- test_the_next_terms
@@ -57,25 +59,6 @@ test = hspec $ do
     -- test_migrate_fpaper
     -- test_evil
 
-
-
-    -- test_has_maximality
- 
-    -- describe "lambda parser" $ do
-    --     it "works" $ do
-    --         [prog|\x:*. x|] `shouldBe` (Lam Tdyn "x" (Vv "x"))
-    --     it "is the same" $ do
-    --         [prog|(\x :*.x) 3|] `shouldBe` (App (Lam Tdyn "x" (Vv "x")) (Vi 3))
-
-    -- describe "finding next term" $ do
-    --     let c = (Lam (Tdyn ~> Tint) "x" (Vv "x"))
-    --     it (show c) $ do
-    --         get_the_next_term c `shouldMatchList` [
-    --             -- [prog|λx : int -> int . x|]
-    --             (Lam (Tint ~> Tint) "x" (Vv "x"))
-    --           , (Lam (Tbool ~> Tint) "x" (Vv "x"))
-    --           , (Lam ((Tdyn ~> Tdyn) ~> Tint) "x" (Vv "x"))
-    --           ]
 
 termit :: String -> Expr -> IO () -> Spec
 termit str term test =
@@ -136,9 +119,6 @@ test_typechecking = describe "type checking" $ do
     let my_succ = (Lam Tdyn "x" my_succ_app3)
     let app3 = (App (Lam Tdyn "x" (Vv "x")) (Vi 3))
 
-
-
-
     example a tenv True
     example my_lam_succ tenv True
     example self_application tenv True
@@ -175,9 +155,6 @@ test_maximality = describe "Singleton check" $ do
     example self_application False
     example lam_term_1 False
     example app_term_2 False
-    -- example (make_mapping fpaper) False
-    -- example (make_mapping f8) False
-
 
 
     --scalability
@@ -216,45 +193,6 @@ test_topchoice = describe "Top choice check" $ do
     example self_application False
     example lam_term_1 False
     example app_term_2 False
-
-    -- example lam_xx_plus_xx []
-    -- example final [max_final]
-    -- example my_lam [my_lam_max]
-    -- example simple_app [simple_app_max]
-    -- example lam_xyy []
-    -- example evil_example []
-    -- example (Lam Tdyn "x" (Vv "x")) []
-    -- example self_application []
-    -- example succ_lam_true [succ_lam_true_max]
-    -- example evil []
-    -- example (Lam Tdyn "x" (App (Vv "x") my_succ))  [(Lam (Tdyn ~> Tint) "x" (App (Vv "x") my_succ))]
-    -- example (App (Vv "succ") 
-    --         (App(Lam Tdyn "y" (Vv "y"))
-    --             (App (Lam Tdyn "x" (Vv "x"))(Vb True)))) [(App (Vv "succ") 
-    --         (App(Lam Tint "y" (Vv "y"))
-    --             (App (Lam Tdyn "x" (Vv "x"))(Vb True)))), (App (Vv "succ") 
-    --         (App(Lam Tdyn "y" (Vv "y"))
-    --             (App (Lam Tbool "x" (Vv "x"))(Vb True))))]
-
-    -- example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) [(Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x"))))]
-    -- example (App (Lam Tint "x" (Vv "x")) (Vb True)) []
-    -- example lam_term_1 []
-    -- example app_term_2 []
-
-  -- mapping
-
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f2) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f4) Nothing
-    -- example (make_mapping f1) Nothing
-    -- example (make_mapping f7) Nothing
-
-    -- (Just (Lam (Tdyn ~> Tint) "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))))
-
-    -- example lam_xy2 Nothing
-    --extra test, term that doesn't type check leads to empty list
-
 
     where 
         example :: Expr -> Bool -> Spec
@@ -354,7 +292,7 @@ test_migrate_large = describe "Show migrations (fig 6) 11,12 and f8" $ do
 
 
 test_migrate_fpaper :: Spec
-test_migrate_fpaper = describe "NP hard example" $ do
+test_migrate_fpaper = describe "NP hard example E_f" $ do
     
     example (make_mapping fpaper) True
 
@@ -407,11 +345,6 @@ test_migration_limit = describe "migration limit" $ do
     example (App identity (Vi 4)) 1
     example evil_example 4
     example lam_xy2 4
-    -- example (make_mapping f2) 0
-    -- example (make_mapping f3) 0
-    -- example (make_mapping f4) 0
-    -- example (make_mapping f5) 0
-
 
     where 
         example :: Expr -> Int -> Spec
@@ -473,15 +406,6 @@ test_const_gen = describe "constraint generation" $ do
                     (CVar 3) .= (CVar 1),
                     (CVar 4) .= (CVar 1)]
 
-    -- example succ_app []
-
-    -- example (make_mapping f1) []
-
-
-    -- example evil []
-
-
-    -- example app_xy_succ_true []
               
     where 
         example :: Expr  ->  [Constraint] -> Spec
@@ -519,9 +443,6 @@ test_simPrec = describe "SimPrec" $ do
                             (CVar 5) .= CBool,
                             (CVar 6) .= CBool ])
 
-    -- example constraints_map1 (fst constraints, (delete (CDyn .<= (CVar 1)) 
-                                              --    (snd constraints)))
-    -- example evil_constraints (CVar 0, [])
 
     where 
         example :: (CType, [Constraint])  -> (CType, [Constraint]) -> Spec
@@ -601,9 +522,6 @@ test_pleaseUnify = describe "Unifies to" $ do
                                (4, (CVar 5 .~> CVar 2))])
 
 
-    -- example (evil_simMatch !! 3) (Left "")
-
-    -- example const_eq_lam_1 (Right [])
 
     where 
         example :: [Constraint]  -> Either String [(Int, CType)] -> Spec
@@ -950,10 +868,7 @@ test_mult_migrate = describe "find multiple migrations" $ do
     example 2 simple_app [(App (Lam Tint "x" (Vv "x")) (Vi 4))]
     example 3 lam [lam1, lam2]
     example 3 (make_mapping f8) []
-    -- example 3 evil_example []
-    -- example 9 self_application []
 
-    -- example 2 (make_mapping [c1, c2]) []
 
 
     where 
