@@ -29,7 +29,6 @@ test = hspec $ do
     test_topchoice
     test_finitness
     test_has_max
-    test_has_max_self_app
     test_has_max_large
     test_migrate_semi
     test_migrate
@@ -207,7 +206,7 @@ test_topchoice = describe "Top choice check" $ do
 
 
 test_has_max :: Spec
-test_has_max = describe "Maximality check (benchmarks 1-9)" $ do
+test_has_max = describe "Maximality check (benchmarks 1-10)" $ do
     
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
     example succ_lam_true  True
@@ -219,22 +218,6 @@ test_has_max = describe "Maximality check (benchmarks 1-9)" $ do
     example lam_xyy True
     example evil True
     example evil_example True
-
-
-    it "should handle x" $ do
-        "x" `shouldBe` "x"
-
-    where 
-        example :: Expr -> Bool -> Spec
-        example term expected = do 
-            it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
-                isJust (closestMaximalMigration term  tenv) `shouldBe` expected
-
-
-test_has_max_self_app :: Spec
-test_has_max_self_app = describe "Maximality check (benchmarks 10)" $ do
-    
-
     example self_application False
 
 
@@ -249,7 +232,7 @@ test_has_max_self_app = describe "Maximality check (benchmarks 10)" $ do
 
 
 test_has_max_large :: Spec
-test_has_max_large = describe "Maximality check (benchmarks 10-12) & NPHard " $ do
+test_has_max_large = describe "Maximality check (benchmarks 11, 12 & NPHard examples) " $ do
 
     example lam_term_1 False
     example app_term_2 False
@@ -286,8 +269,8 @@ test_migrate_semi = describe "Show migrations (fig 6) benchmarks 1-9" $ do
     where 
         example :: Expr -> Maybe Expr -> Spec
         example term expected = do 
-            it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
-                (fromJust (closestMaximalMigration term tenv)) `shouldBe` (fromJust expected)
+            it ("sees that " ++ show term ++ " has a maximal migration " ++ show (fromJust expected)) $ do
+                (closestMaximalMigration term tenv) `shouldBe` expected
 
 
 
