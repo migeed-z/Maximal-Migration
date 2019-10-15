@@ -30,6 +30,7 @@ test = hspec $ do
     test_finitness
     test_has_max
     test_has_max_large
+    test_migrate_semi
     test_migrate
     test_migrate_large
     test_lam_yxx
@@ -38,7 +39,6 @@ test = hspec $ do
     -- test_mult_migrate 
 
     --more tests:
-
     -- test_typechecking
     -- test_mult_migrate
     -- test_the_next_terms
@@ -228,7 +228,7 @@ test_has_max = describe "Maximality check (benchmarks 1-10)" $ do
         example :: Expr -> Bool -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
-                isJust (closestMaximalMigration_5 term tenv) `shouldBe` expected
+                isJust (closestMaximalMigration_n term 5 tenv) `shouldBe` expected
 
 
 test_has_max_large :: Spec
@@ -244,11 +244,11 @@ test_has_max_large = describe "Maximality check (benchmarks 10-12) & NPHard " $ 
         example :: Expr -> Bool -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
-                isJust (closestMaximalMigration_3 term tenv) `shouldBe` expected
+                isJust (closestMaximalMigration_n term 3 tenv) `shouldBe` expected
 
 
-test_migrate :: Spec
-test_migrate = describe "Show migrations (fig 6) benchmarks 1-10" $ do
+test_migrate_semi :: Spec
+test_migrate_semi = describe "Show migrations (fig 6) benchmarks 1-9" $ do
     
 
 
@@ -264,6 +264,20 @@ test_migrate = describe "Show migrations (fig 6) benchmarks 1-10" $ do
     example lam_xyy (Just lam_xyy_max)
     example evil (Just evil_m)
     example evil_example (Just evil_example_max)
+
+
+    where 
+        example :: Expr -> Maybe Expr -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
+                (fromJust (closestMaximalMigration term tenv)) `shouldBe` (fromJust expected)
+
+
+
+test_migrate :: Spec
+test_migrate = describe "Show migrations (fig 6) benchmark 10" $ do
+    
+
     example self_application Nothing
 
 
@@ -271,7 +285,7 @@ test_migrate = describe "Show migrations (fig 6) benchmarks 1-10" $ do
         example :: Expr -> Maybe Expr -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
-                closestMaximalMigration_5 term tenv `shouldBe` expected
+                closestMaximalMigration_n term 5 tenv `shouldBe` expected
 
 
 
@@ -288,7 +302,7 @@ test_migrate_large = describe "Show migrations (fig 6) 11,12 and f8" $ do
         example :: Expr -> Maybe Expr -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has a maximal migration " ++ show expected) $ do
-                closestMaximalMigration_4 term tenv `shouldBe` expected
+                closestMaximalMigration_n term 4 tenv `shouldBe` expected
 
 
 test_migrate_fpaper :: Spec
@@ -484,21 +498,6 @@ test_simMatch = describe "simMatch" $ do
             it ("sees that " ++ show con ++ " simplifies matching to " ++ show expected) $ do
                 (simMatch con)`shouldBe` expected
 
-
--- test_unify2n :: Spec
--- test_unify2n = describe "apply unifier 2n" $ do
-    
---     it "should handle x" $ do
---         "x" `shouldBe` "x"
-
---     let constraints = (snd (fixed simPrec (constraint succ_lam_true tenv)))
---     example succ_lam_true tenv [constraints]
-
---     where 
---         example :: Expr  -> Env -> [[Constraint]] -> Spec
---         example expr env expected = do 
---             it ("sees that " ++ show expr ++ "apply unifier 2n" ++ show expected) $ do
---                   (apply_unifier_to_2n (compose_upto_match expr env)) `shouldBe` expected
 
 test_pleaseUnify :: Spec
 test_pleaseUnify = describe "Unifies to" $ do
@@ -847,6 +846,9 @@ test_lam_yxx= describe "find specific maximal migration" $ do
 --             it ("sees that " ++ show expr ++ " has migrations"
 --                                        ++ show expected) $ do
 --                 findAllMaximalMigrations expr tenv `shouldBe` expected
+
+
+
 
 test_mult_migrate :: Spec
 test_mult_migrate = describe "find multiple migrations" $ do

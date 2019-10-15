@@ -42,22 +42,20 @@ findMaximalMigrationsAtDepth n t env =
 
 
 
--- | Returns the maximal migration closest to the term.
+-- | Returns the maximals upto level n
 findAllMaximalMigrationsN :: Int -> Expr -> Env -> [Expr]
 findAllMaximalMigrationsN d t env =
   concat [ findMaximalMigrationsAtDepth n t env | n <- [0..d+1]]
 
 -- | Returns the maximal migration closest to the term.
--- 0..maximalNumberOfSteps+1 upto level 4
 findAllMaximalMigrations :: Expr -> Env -> [Expr]
 findAllMaximalMigrations t env =
-  concat [ findMaximalMigrationsAtDepth n t env | n <- [0..maximalNumberOfSteps+1]]
-  where
-    maximalNumberOfSteps = 
-      (migration_limit t env)  * (count_types t)
+  concat [ findMaximalMigrationsAtDepth n t env | n <- [0..]]
+  -- where
+  --   maximalNumberOfSteps = 
+  --     (migration_limit t env)  * (count_types t)
 
 
-  
 -- | Returns the maximal migration closest to the term.
 findAllMaximalMigrationsUnlimited :: Expr -> Env -> [Expr]
 findAllMaximalMigrationsUnlimited t env =
@@ -73,7 +71,7 @@ findMaximalMigration n t env =
     x:_ -> Just x
     [] -> Nothing
 
--- | Returns the maximal migration closest to the term.
+-- | Returns the semi algorithm for maximal migraiton.
 closestMaximalMigration :: Expr -> Env -> Maybe Expr
 closestMaximalMigration t env =
     case findAllMaximalMigrations t env of
@@ -81,25 +79,12 @@ closestMaximalMigration t env =
     [] -> Nothing
 
 
-
-closestMaximalMigration_3 :: Expr -> Env -> Maybe Expr
-closestMaximalMigration_3 t env =
-    case findAllMaximalMigrations_3 t env of
+closestMaximalMigration_n :: Expr -> Int ->  Env -> Maybe Expr
+closestMaximalMigration_n t n env =
+    case findAllMaximalMigrationsN n t env of
     x:_ -> Just x
     [] -> Nothing
 
-closestMaximalMigration_4 :: Expr -> Env -> Maybe Expr
-closestMaximalMigration_4 t env =
-    case findAllMaximalMigrations_4 t env of
-    x:_ -> Just x
-    [] -> Nothing
-
-
-closestMaximalMigration_5 :: Expr -> Env -> Maybe Expr
-closestMaximalMigration_5 t env =
-    case findAllMaximalMigrations_5 t env of
-    x:_ -> Just x
-    [] -> Nothing
 
 finalMaximalMigration :: Expr -> Env -> [Expr]
 finalMaximalMigration e env = 
