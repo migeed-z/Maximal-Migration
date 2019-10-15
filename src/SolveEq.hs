@@ -25,24 +25,12 @@ import Data.Bool(bool)
 import Control.Monad(liftM2)
 import Lang
 import Constraint
--- import Data.Void
--- import Data.List as List
--- import Data.Set as Set
--- import Data.Foldable as Foldable
 import Data.Maybe (fromJust)
 import Data.Maybe (isJust)
--- import Data.Maybe (isJust)
--- import TypeCheck
--- import Data.Typeable
--- import Lang
--- import Algorithms
 import qualified Data.Map as Map
 import Lang
 import Algorithms
 
-
--- main :: IO ()    -- This says that main is an IO action.
--- main = return () -- This tells main to do nothing.
 
 data CTypeF a 
     = CVarF Int 
@@ -260,19 +248,10 @@ check_nothing (x:xs) (x1 : xs2) = (x: (check_nothing xs xs2))
 check_nothing ints _ = ints
 
 
--- l2 check against
--- l3 boundedness
 new_check :: [Int] -> [[Int]] -> [[Int]] -> Bool
 new_check l1 [] [] = True
--- new_check l1 _ [] = False
--- new_check _ l2 [] = False
 new_check l1 (x1:xs1) (x2:xs2) = (length l1) == ((length x1) + (length x2)) && (new_check l1 xs1 xs2)
                                  
--- && (compare_all_const e env)
-
-
--- compare_all_const :: Expr -> Env -> Bool
--- compare_all_const e env =  (comapare_list_wise (check_finitness_all e env) (collect_free_vars e)
 
 check_finitness_all :: Expr -> Env -> [[Int]]
 check_finitness_all e env =  (map fst (apply_unifier_to_2n_new (compose_upto_match e env)))
@@ -312,30 +291,5 @@ collect_free_vars _ = []
 
 rmdups :: (Ord a) => [a] -> [a]
 rmdups = map head . group . sort
-
--- --checks if a consistency constraint has a self loop
--- have_self_loop :: Constraint -> Bool
--- have_self_loop (Consistency (CVar v1) (CVar v2)) = True
--- have_self_loop _ = False
---     where v1 = v2
-
--- data CType 
---   = CVar Int 
---   | CArr CType CType
---   | CInt
---   | CDyn
---   | CBool
---   deriving (Eq, Data)
- 
-
--- infixr 7 .~>
--- (.~>) = CArr
-
--- data Constraint 
---   = Matching CType CType 
---   | Equality CType CType
---   | Consistency CType CType
---   | Precision CType CType
---   deriving (Eq, Data)
 
 

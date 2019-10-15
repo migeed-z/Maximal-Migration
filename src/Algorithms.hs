@@ -59,11 +59,6 @@ simPrec (typ, x:xs) = ((fst rstc),(snd fstc) ++ (snd rstc))
 --step 2
 --first possibility
 
-
-applicable_s :: Constraint -> Bool
-applicable_s (Matching (CVar v)(CArr (CVar v1)(CVar v2))) = True
-applicable_s _ = False
-
 match :: Constraint -> [(Int, [Constraint])]
 match (Matching (CVar v)(CArr (CVar v1)(CVar v2))) = 
   [ (1, [ (CVar v) .=  ((CVar v1) .~> (CVar v2)) ])
@@ -91,35 +86,7 @@ simMatch' cs = map fn . sequence $
     fn :: [(Int, [Constraint])] -> ([Int], [Constraint])
     fn ls = (map fst ls, concatMap snd ls)
 
-
-               
-printProgress :: Expr -> IO ()
-printProgress expr =
-
-  forM_ (compose_upto_match expr tenv) $ \(i, s) -> do
-      print (filter (/=0) i)
-
-  where
-    -- Compose all operations
-    compose_upto_match :: Expr -> Env -> [([Int],[Constraint])]
-    compose_upto_match expr env = (simMatch' (snd (fixed simPrec (constraint expr env))))
-
-main2 = do
-  let f1 = [Cl (Neg "x0") (Neg "x1") (Neg "x2")]
-  printProgress (make_mapping f1)
-
-
-             
--- --add non-applicable elements to every sublist
--- process_combinations :: [[Constraint]] -> [Constraint] -> [[Constraint]]
--- process_combinations (x:xs) cnst = (x  ++ (filter (not . applicable_s) cnst)) : 
---                                    (process_combinations xs cnst)
--- process_combinations [] _ = []
-
-
--- simMatch :: [Constraint] -> [[Constraint]]
--- simMatch const = (process_combinations (combinations (filter applicable_s const)) const)
-
+  
 --call our constraints simplifier till we get a fixed point
 fixed :: Eq a => (a -> a) -> a -> a
 fixed f a 
@@ -128,4 +95,17 @@ fixed f a
   where a' = f a
 
 
+-- printProgress :: Expr -> IO ()
+-- printProgress expr =
 
+--   forM_ (compose_upto_match expr tenv) $ \(i, s) -> do
+--       print (filter (/=0) i)
+
+--   where
+--     -- Compose all operations
+--     compose_upto_match :: Expr -> Env -> [([Int],[Constraint])]
+--     compose_upto_match expr env = (simMatch' (snd (fixed simPrec (constraint expr env))))
+
+-- main2 = do
+--   let f1 = [Cl (Neg "x0") (Neg "x1") (Neg "x2")]
+--   printProgress (make_mapping f1)

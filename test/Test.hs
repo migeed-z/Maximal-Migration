@@ -10,7 +10,6 @@ import Maximality
 import TypeCheck
 import Counting
 import Lang
-import TH
 import Constraint
 import Algorithms
 import SolveEq
