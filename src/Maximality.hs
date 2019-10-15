@@ -35,19 +35,19 @@ findWellTypedMigrationsAtDepth n t env
 
       
 
--- | finds ALL maximal migration in exactly depth N, if they exists.
+-- finds ALL maximal migration in exactly depth N, if they exists.
 findMaximalMigrationsAtDepth :: Int -> Expr -> Env -> [Expr]
 findMaximalMigrationsAtDepth n t env =
    [ t' | t' <- findWellTypedMigrationsAtDepth n t env, ismaximal t' env]
 
 
 
--- | Returns the maximals upto level n
+-- Returns the maximals upto level n
 findAllMaximalMigrationsN :: Int -> Expr -> Env -> [Expr]
 findAllMaximalMigrationsN d t env =
   concat [ findMaximalMigrationsAtDepth n t env | n <- [0..d+1]]
 
--- | Returns the maximal migration closest to the term.
+-- Returns all maximal migrations
 findAllMaximalMigrations :: Expr -> Env -> [Expr]
 findAllMaximalMigrations t env =
   concat [ findMaximalMigrationsAtDepth n t env | n <- [0..]]
@@ -56,7 +56,8 @@ findAllMaximalMigrations t env =
   --     (migration_limit t env)  * (count_types t)
 
 
--- | Returns the maximal migration closest to the term.
+-- Returns the maximal migration closest to the term.
+-- used only when the lattice is finite
 findAllMaximalMigrationsUnlimited :: Expr -> Env -> [Expr]
 findAllMaximalMigrationsUnlimited t env =
   concat 
@@ -71,14 +72,18 @@ findMaximalMigration n t env =
     x:_ -> Just x
     [] -> Nothing
 
--- | Returns the semi algorithm for maximal migraiton.
+
+
+
+-- Returns the semi algorithm for maximal migraiton.
 closestMaximalMigration :: Expr -> Env -> Maybe Expr
 closestMaximalMigration t env =
     case findAllMaximalMigrations t env of
     x:_ -> Just x
     [] -> Nothing
 
-
+-- Returns the first maximal migration
+-- stops at level n
 closestMaximalMigration_n :: Expr -> Int ->  Env -> Maybe Expr
 closestMaximalMigration_n t n env =
     case findAllMaximalMigrationsN n t env of
@@ -86,6 +91,7 @@ closestMaximalMigration_n t n env =
     [] -> Nothing
 
 
+--Hardcoded version with particular levels for performance
 closestMaximalMigration_3 :: Expr -> Env -> Maybe Expr
 closestMaximalMigration_3 t env =
     case findAllMaximalMigrations_3 t env of
@@ -105,19 +111,6 @@ closestMaximalMigration_5 t env =
     x:_ -> Just x
     [] -> Nothing
 
-finalMaximalMigration :: Expr -> Env -> [Expr]
-finalMaximalMigration e env = 
-  case (check_finitness e env) of 
-    True -> (findAllMaximalMigrationsUnlimited e env)
-    otherwise -> (findAllMaximalMigrations e env)
-
-
-
-topchoice :: Expr -> Env -> [Expr]
-topchoice e env = 
-  case (check_finitness e env) of 
-    True -> (findAllMaximalMigrationsUnlimited e env)
-    otherwise -> []
 
 
 findAllMaximalMigrations_3 e env = (findAllMaximalMigrationsN 3 e env)
@@ -126,6 +119,20 @@ findAllMaximalMigrations_4 e env = (findAllMaximalMigrationsN 4 e env)
 
 findAllMaximalMigrations_5 e env = (findAllMaximalMigrationsN 5 e env)
 
+
+--Finds all top choices if they exist
+topchoice :: Expr -> Env -> [Expr]
+topchoice e env = 
+  case (check_finitness e env) of 
+    True -> (findAllMaximalMigrationsUnlimited e env)
+    otherwise -> []
+
+--Another variation of the semi algorithm which checks for finitness first
+finalMaximalMigration :: Expr -> Env -> [Expr]
+finalMaximalMigration e env = 
+  case (check_finitness e env) of 
+    True -> (findAllMaximalMigrationsUnlimited e env)
+    otherwise -> (findAllMaximalMigrations e env)
 
 --for a given level in the lattice, check if anything is maximal
 is_any_term_maximal :: [Expr] -> Env -> Maybe Expr
@@ -138,9 +145,8 @@ is_any_term_maximal (x:xs) env = case (ismaximal x env) of
 ismaximal :: Expr -> Env -> Bool
 ismaximal e env =  (null (get_the_next_well_typed_term e env))
 
---   any (\e' -> type_checks e' env) (get_the_next_term e)
--- null (get_the_next_well_typed_term e env)
---does this type-check?
+
+--does this term type-check?
 type_checks :: Expr -> Env -> Bool
 type_checks e env = 
     case (typecheck e env) of

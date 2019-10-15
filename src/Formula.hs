@@ -58,14 +58,3 @@ instance Show Clause where
 
 
 
--- test_printer = do
---   print(Pos 4)
---   print(Neg 3)
---   print([Cl (Pos 4) (Neg 5) (Neg 6), Cl (Pos 4) (Neg 5) (Neg 6)])
-  -- print(closestMaximalMigration my_app tenv)
-
-
-
-
-
-

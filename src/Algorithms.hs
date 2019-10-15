@@ -128,17 +128,4 @@ fixed f a
   where a' = f a
 
 
-my_test = do
-    -- let c0 = CVar 4 .=  CBool
 
-    let c1 = CVar 0 .=  CInt
-    let c2 = (CVar 3) .|> (CArr (CVar 1)(CVar 2))
-    let c3 = (CVar 6) .|> (CArr (CVar 7)(CVar 8))
-    let c4 = (CVar 10) .|> (CArr (CVar 11)(CVar 12))
-    -- let comb = combinations [c2, c3]
-    -- let prossess = (process_combinations comb [c0, c1])
-    -- let finals = (simMatch [c0, c1, c2, c3])
-    print([c1,c2,c3,c4])
-    -- print(simMatch_sing1 c2)
-    -- print(simMatch_sing2 c2)
-    print(simMatch [c1, c2, c3, c4])

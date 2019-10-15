@@ -1,6 +1,6 @@
+--experimental
 --We want to determine the maximum size of the type
 --For it to have a maximal migration.
---After that point, the program cannot have a maximal migration.
 {-# Language ViewPatterns #-}
 
 
@@ -34,7 +34,6 @@ migration_limit (Lam typ x term) env = migration_limit term ((x,typ):env)
   --  (match_on_var x typ term ((x,typ):env)) + (migration_limit term ((x,typ):env))
 migration_limit (App e1 e2) env = (migration_limit e1 env) + (migration_limit e2 env) + 1
 
--- λx : * -> int . (λy : int . (λz : int . True) (succ (x True))) (succ (x 4))
 
 --note that you may want to look at all applications in general
 match_on_var :: Name -> Vtype -> Expr -> Env -> Int
@@ -52,37 +51,5 @@ match_on_var x typeofx term env =
         term -> card typeofx  --x did not occur in the body so just take the type environment since we know it type-checks. 
 
 
-
--- count_apps_abs :: Expr -> Int
--- count_apps_abs (Vi n) = 0
--- count_apps_abs (Vb b) = 0
--- count_apps_abs (Vv x) = 0
--- count_apps_abs 
-
--- type_test_succ = do
---     let identity = (Lam Tdyn "x" (Vv "x"))
---     let x_4 = (App (Vv "x") (Vi 4))
---     let x_true = (App (Vv "x") (Vb True))
---     let my_succ = (App (Vv "succ") x_true)
---     let my_succ2 = (App (Vv "succ") x_4)
---     let lam_z = (Lam Tint "z" (Vb True))
---     let first_app = (App lam_z my_succ)
---     let lam_y = (Lam Tint "y" first_app)
---     let appx  = (App lam_y my_succ2)
---     let final = (Lam (Tdyn ~> Tint) "x" appx)
-
---     print(match_on_var "x" x_true (("x",Tdyn ~> Tint):tenv))
-
-
-
-
-
-
-
-
-
---     print(typ_precision Tdyn Tdyn)
---     print(typ_precision Tdyn (Tint ~> Tint))
---     print(typ_precision (Tint ~> Tint) Tdyn)
 
 
