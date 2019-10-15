@@ -14,8 +14,8 @@ import NPHard
 import Formula
 
 
-main3 :: IO ()    -- This says that main is an IO action.
-main3 = return () -- This tells main to do nothing.
+main3 :: IO ()    
+main3 = return () 
 
 --term
 x_4 = (App (Vv "x") (Vi 4))

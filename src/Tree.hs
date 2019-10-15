@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+-- Prints latex latticies
 
 module Tree where
 

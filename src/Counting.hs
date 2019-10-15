@@ -31,7 +31,6 @@ migration_limit (Vi n) _ = 0
 migration_limit (Vb b) _ = 0
 migration_limit (Vv x) (envlookup x -> Just t) = (card t)
 migration_limit (Lam typ x term) env = migration_limit term ((x,typ):env)
-  --  (match_on_var x typ term ((x,typ):env)) + (migration_limit term ((x,typ):env))
 migration_limit (App e1 e2) env = (migration_limit e1 env) + (migration_limit e2 env) + 1
 
 
