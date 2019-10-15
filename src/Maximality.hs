@@ -86,6 +86,25 @@ closestMaximalMigration_n t n env =
     [] -> Nothing
 
 
+closestMaximalMigration_3 :: Expr -> Env -> Maybe Expr
+closestMaximalMigration_3 t env =
+    case findAllMaximalMigrations_3 t env of
+    x:_ -> Just x
+    [] -> Nothing
+
+closestMaximalMigration_4 :: Expr -> Env -> Maybe Expr
+closestMaximalMigration_4 t env =
+    case findAllMaximalMigrations_4 t env of
+    x:_ -> Just x
+    [] -> Nothing
+
+
+closestMaximalMigration_5 :: Expr -> Env -> Maybe Expr
+closestMaximalMigration_5 t env =
+    case findAllMaximalMigrations_5 t env of
+    x:_ -> Just x
+    [] -> Nothing
+
 finalMaximalMigration :: Expr -> Env -> [Expr]
 finalMaximalMigration e env = 
   case (check_finitness e env) of 

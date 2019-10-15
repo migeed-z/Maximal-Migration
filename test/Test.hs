@@ -29,6 +29,7 @@ test = hspec $ do
     test_topchoice
     test_finitness
     test_has_max
+    test_has_max_self_app
     test_has_max_large
     test_migrate_semi
     test_migrate
@@ -206,7 +207,7 @@ test_topchoice = describe "Top choice check" $ do
 
 
 test_has_max :: Spec
-test_has_max = describe "Maximality check (benchmarks 1-10)" $ do
+test_has_max = describe "Maximality check (benchmarks 1-9)" $ do
     
     example (Lam Tdyn "x" (App (Vv "x") (App (Vv "succ") (Vv "x")))) True
     example succ_lam_true  True
@@ -218,6 +219,22 @@ test_has_max = describe "Maximality check (benchmarks 1-10)" $ do
     example lam_xyy True
     example evil True
     example evil_example True
+
+
+    it "should handle x" $ do
+        "x" `shouldBe` "x"
+
+    where 
+        example :: Expr -> Bool -> Spec
+        example term expected = do 
+            it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
+                isJust (closestMaximalMigration term  tenv) `shouldBe` expected
+
+
+test_has_max_self_app :: Spec
+test_has_max_self_app = describe "Maximality check (benchmarks 10)" $ do
+    
+
     example self_application False
 
 
@@ -244,7 +261,7 @@ test_has_max_large = describe "Maximality check (benchmarks 10-12) & NPHard " $ 
         example :: Expr -> Bool -> Spec
         example term expected = do 
             it ("sees that " ++ show term ++ " has max? = " ++ show expected) $ do
-                isJust (closestMaximalMigration_n term 3 tenv) `shouldBe` expected
+                isJust (closestMaximalMigration_n term 4 tenv) `shouldBe` expected
 
 
 test_migrate_semi :: Spec
