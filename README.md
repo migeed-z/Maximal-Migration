@@ -1,3 +1,13 @@
+
+# What is Decidable about Gradual Types?
+###### Zeina Migeed, Jens Palsberg
+------------
+
+
+##### This artifact is for our POPL 2020 submission.
+
+------------
+
 ### Step 1A: Introduction 
 ------------
 In this section, we will introduce some of the files in the root directory and discuss their functionality. 
