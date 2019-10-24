@@ -1,7 +1,6 @@
 import Criterion.Main
 import Examples
-import SolveEq
-import Algorithms
+import Finiteness
 import Lang
 import Maximality
 import NPHard

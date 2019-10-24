@@ -33,8 +33,8 @@ make_lam n1 n2 f=
 clauseLiterals :: Clause -> [Literal]
 clauseLiterals (Cl l1 l2 l3) = [l1, l2, l3]
 
-collect_all_vars :: LFormula -> [String]
-collect_all_vars = 
+collect_vars :: LFormula -> [String]
+collect_vars = 
   nub . concatMap (map (literalNameAsString . nameOfLiteral) . clauseLiterals)
 
 
@@ -125,7 +125,7 @@ make_body :: Int -> LFormula -> Expr
 make_body n f = 
   (App (App (Vv "+") (make_app_vars n f))
        (make_pos_neg_lam_all 
-        (collect_all_vars f) f))               
+        (collect_vars f) f))               
 
 var :: Int -> Expr
 var n = (Vv ("v" ++ (show n)))

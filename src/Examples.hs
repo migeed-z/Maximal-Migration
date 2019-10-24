@@ -7,11 +7,10 @@ module Examples where
 
 import Lang
 import Constraint
-import Algorithms
-import SolveEq
 import Data.Either
 import NPHard
 import Formula
+import Finiteness
 
 
 main3 :: IO ()    

@@ -78,8 +78,6 @@ instance Show Constraint where
                           showString " ~ " . 
                           showsPrec 0 t2
 
--- vToCType (fromJust (envlookup x env)))
-
 
 newtype State s a = State { runState :: s -> (s, a) }
 

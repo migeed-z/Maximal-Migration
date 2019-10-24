@@ -11,8 +11,7 @@ import TypeCheck
 import Counting
 import Lang
 import Constraint
-import Algorithms
-import SolveEq
+import Finiteness
 import Data.Either
 import NPHard
 import Formula
@@ -35,6 +34,7 @@ test = hspec $ do
     test_lam_yxx
     test_migrate_fpaper
     test_get_type
+
     -- test_mult_migrate 
 
     --more tests:
@@ -56,8 +56,6 @@ test = hspec $ do
     -- test_boundnessOneSet
     -- test_boundness
     -- test_migrate_fpaper
-    -- test_evil
-
 
 termit :: String -> Expr -> IO () -> Spec
 termit str term test =
@@ -762,9 +760,6 @@ test_boundness  = describe "boundedness for constraints" $ do
                                        ++ show expected) $ do
                 boundedness cnst_lst `shouldBe` expected
 
-
-
-
 test_finitness :: Spec
 test_finitness  = describe "Finitness check" $ do
     
@@ -813,7 +808,6 @@ test_finitness  = describe "Finitness check" $ do
                 check_finitness expr tenv `shouldBe` expected
 
 
-
 --in one of our benchmark, we do not use the closest migration we find.
 -- this test shows that our tool finds the migration in level 5 of the lattice
 test_lam_yxx :: Spec
@@ -829,24 +823,6 @@ test_lam_yxx= describe "find specific maximal migration" $ do
                 " is a maximal migration for " ++ 
                 show expr1) $ do
                  (elem expr2 (findAllMaximalMigrationsN 5 expr1  tenv)) `shouldBe` True
-
-
--- test_evil :: Spec
--- test_evil= describe "find specific maximal migration" $ do
-    
---     example evil_example []  
-   
---     it "should handle x" $ do
---         "x" `shouldBe` "x"
-
---     where 
---         example :: Expr  -> [Expr] -> Spec
---         example expr expected = do 
---             it ("sees that " ++ show expr ++ " has migrations"
---                                        ++ show expected) $ do
---                 findAllMaximalMigrations expr tenv `shouldBe` expected
-
-
 
 
 test_mult_migrate :: Spec
