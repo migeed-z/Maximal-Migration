@@ -380,7 +380,8 @@ check_finitness e env = (boundedness (filter_isjust c)) &&
 -----------------------------------------------------------------
 
 --auxilary functions
-
+--note that when we collect variables, we ensure there are no duplicates
+-- so it is enough to check the length (using rmdups function)
 check_lengths :: [Int] -> [[Int]] -> [[Int]] -> Bool
 check_lengths l1 [] [] = True
 check_lengths l1 (x1:xs1) (x2:xs2) = (length l1) == ((length x1) + (length x2)) && (check_lengths l1 xs1 xs2)
@@ -457,5 +458,6 @@ fixedM :: (Eq a, Monad m) => (a -> m a) -> a -> m a
 fixedM f = go
     where go x = f x >>= liftM2 bool go pure <*> (x ==)
 
+--removes all duplicates from a given list
 rmdups :: (Ord a) => [a] -> [a]
 rmdups = map head . group . sort
