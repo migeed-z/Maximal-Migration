@@ -168,6 +168,41 @@ simMatch' cs = map fn . sequence $
     fn :: [(Int, [Constraint])] -> ([Int], [Constraint])
     fn ls = (map fst ls, concatMap snd ls)
 
+--------------------------------------------------------------------
+
+--simCon
+
+--simCon for a single constraint
+simConSing:: Constraint -> Maybe [Constraint]
+simConSing (Consistency (CArr t1 t2) CBool) = Nothing
+simConSing (Consistency (CArr t1 t2) CInt) = Nothing
+simConSing (Consistency CBool (CArr t1 t2)) = Nothing
+simConSing (Consistency CInt (CArr t1 t2)) = Nothing
+simConSing (Consistency CBool CInt) = Nothing
+simConSing (Consistency CInt CBool) = Nothing
+simConSing (Consistency CBool CBool) = Just []
+simConSing (Consistency CInt CInt) = Just []
+simConSing (Consistency t CDyn) = Just []
+simConSing (Consistency CDyn t) = Just []
+simConSing (Consistency (CArr t1 t2) (CArr t1' t2')) = 
+                        Just [(Consistency t1 t1'),
+                              (Consistency t2 t2')]
+simConSing (Consistency (CVar v1) (CVar v2)) = Just [(Consistency (CVar v1) (CVar v2))]
+simConSing (Consistency t (CVar v)) = Just [(Consistency (CVar v) t)]
+
+simConSing c = Just [c]
+
+
+--simCon for a set of constraints
+simCon :: [Constraint] -> Maybe [Constraint]
+simCon [] = Just []
+simCon (x:xs) = case ((simConSing x), (simCon xs))  of
+              (Nothing, _) -> Nothing
+              (_, Nothing) -> Nothing
+              (Just lst, _) -> Just (lst ++ (concat (simCon xs)))
+
+
+
   --------------------------------------------------------------------
 
 -- Unification
@@ -215,41 +250,6 @@ apply_unifier (x:xs) sol = (apply_unifier xs sol)
 
 --------------------------------------------------------------------
 
-
---simCon
-
---simCon for a single constraint
-simConSing:: Constraint -> Maybe [Constraint]
-simConSing (Consistency (CArr t1 t2) CBool) = Nothing
-simConSing (Consistency (CArr t1 t2) CInt) = Nothing
-simConSing (Consistency CBool (CArr t1 t2)) = Nothing
-simConSing (Consistency CInt (CArr t1 t2)) = Nothing
-simConSing (Consistency CBool CInt) = Nothing
-simConSing (Consistency CInt CBool) = Nothing
-simConSing (Consistency CBool CBool) = Just []
-simConSing (Consistency CInt CInt) = Just []
-simConSing (Consistency t CDyn) = Just []
-simConSing (Consistency CDyn t) = Just []
-simConSing (Consistency (CArr t1 t2) (CArr t1' t2')) = 
-                        Just [(Consistency t1 t1'),
-                              (Consistency t2 t2')]
-simConSing (Consistency (CVar v1) (CVar v2)) = Just [(Consistency (CVar v1) (CVar v2))]
-simConSing (Consistency t (CVar v)) = Just [(Consistency (CVar v) t)]
-
-simConSing c = Just [c]
-
-
---simCon for a set of constraints
-simCon :: [Constraint] -> Maybe [Constraint]
-simCon [] = Just []
-simCon (x:xs) = case ((simConSing x), (simCon xs))  of
-              (Nothing, _) -> Nothing
-              (_, Nothing) -> Nothing
-              (Just lst, _) -> Just (lst ++ (concat (simCon xs)))
-
-
-
---------------------------------------------------------------------
 
 
 -- Boundedness check 

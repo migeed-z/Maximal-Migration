@@ -31,8 +31,8 @@ test = hspec $ do
     test_migrate_semi
     test_migrate
     test_migrate_large
-    test_lam_yxx
     test_migrate_fpaper
+    test_lam_yxx
     test_get_type
 
     -- test_mult_migrate 

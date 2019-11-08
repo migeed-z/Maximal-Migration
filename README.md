@@ -75,7 +75,7 @@ You will see this output in the terminal:
 The output below this corresponds to benchmarks 10-12 in Fig 4
 
 **Maximality check (benchmarks 11, 12 & NPHard examples)**
-The output consists of 4 benchmarks. The first two are benchmarks 11 and 12 in the figure while the last two are the benchmark E_{f_2} from the paper, and the mapping generated from f_8 in section 7. We can see that E_{f_2} has a maximal migration and that the mapping from f_8 does not, since f_8 is unsatisfiable.
+The output consists of 4 benchmarks. The first two are benchmarks 11 and 12 in the figure while the last two are the benchmark E_{f_2} from section 6.3 of the paper, and the mapping generated from f_8 in section 7. We can see that E_{f_2} has a maximal migration and that the mapping from f_8 does not, since f_8 is unsatisfiable.
 
 ### Step 3: Verify Figure 6 
 We now verify the results in Figure 6. 
@@ -106,24 +106,6 @@ Next, the above check will run benchmarks 11 and 12, as well as the program gene
 
 ------------
 
-Finally, you will notice that for the program
-
-    λx : * . λy : * . y x x, 
-
-the maximal migration given by the tool  is 
-
-    λx : * . λy : int -> bool -> int . y x x
-
-This is because the function we use in this test finds the *closest* maximal in the lattice. To see that the migration in the table is indeed a valid migration and can be found using our algorithm, you can see the next check:
-
-**find specific maximal migration**
-
-    sees that λx : int . λy : int -> int -> int . y x x is a maximal migration for λx : * . λy : * . y x x
-
-Here, we run the migration algorithm upto level 5 and collect all maximal migrations and check that the migration shown in the table is valid. We will not display all migrations in this case for space reasons but we will show in step 6 how to find migrations at different levels in the lattice.
-
-------------
-
 ### Step 4: NP Hardness examples
 We want to verify that the NP hardness example seen in section 6.3 has a maximal migration. 
 
@@ -132,7 +114,7 @@ For this, read the part of the output which says:
 **NP hard example E_f**
 Below that line, you will see the proram and the corresponding maximal migration. For this, we have implemented a mapping function *make_mapping* in `NPHard.hs` which takes boolean formulas to programs.  A check is called on that program to verify that it is indeed a maximal migration.
 
-### Step 5: Exploring the lattice (optional)
+### Step 5A: Exploring the lattice (optional)
 To run the maximality algorithm up to a given level in the lattice, uncomment the line of code that says 
 `    -- test_mult_migrate` in `test/Test.hs` then rerun the command:
 ` stack test/Test.hs`
@@ -166,6 +148,23 @@ which returns only the first migration found while exploring the lattice. If no 
    Is the function used for our performance evaluation.  This function first checks if the lattice is finite, and if so, retrieves all maximal migrations. Otherwise, returns an empty list.
 
 
+###  Step 5B:  λx : * . λy : * . y x x
+Here, we will see a specific example of exploring different levels of the lattice. 
+In figure 6, we notice that for the program
+
+    λx : * . λy : * . y x x, 
+
+the closest maximal migration is the following:
+
+    λx : * . λy : int -> bool -> int . y x x
+
+This is because in our maximality check, we find the *closest* maximal in the lattice. We want to see that the migration in the table is indeed a valid migration and can be found using our algorithm. Consider the check:
+
+**find specific maximal migration**
+
+    sees that λx : int . λy : int -> int -> int . y x x is a maximal migration for λx : * . λy : * . y x x
+
+Here, we run the migration algorithm upto level 5 and collect all maximal migrations and check that the migration shown in the table is valid. We will not display all migrations in this case for space reasons but we will show in step 6 how to find migrations at different levels in the lattice.
 
 ### Step 6: Verify Figure 7
 You will see the check:

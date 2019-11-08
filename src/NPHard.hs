@@ -134,72 +134,12 @@ var n = (Vv ("v" ++ (show n)))
 -- map_prog  = (Vi 3)
 
 
-test_printer = do
-  let c1 = Cl (Pos "x0") (Neg "x1") (Pos "x2")
-  let c2 = Cl (Neg "x0") (Pos "x1") (Pos "x2")
+-- test_printer = do
+--   let c1 = Cl (Pos "x0") (Neg "x1") (Pos "x2")
+--   let c2 = Cl (Neg "x0") (Pos "x1") (Pos "x2")
 
-  -- print (make_lam 1 1 [c1, c2])
-  print (make_mapping [c1, c2])
-  -- print(makeNegVar "x" [c1, c2, c3])
-  -- print(make_lam 3 3)
-  -- print (make_pos_neg_lam "x0" [c1, c2])
-  -- print $ make_lam 3 3 []
-  -- print $ make_neg_lam "x0" [c1, c2]
-  -- print $ make_pos_lam_true "x0" [c1, c2]
-
-
-  -- print $ make_neg_lam "x1" [c1, c2]
-  -- print $ make_pos_lam_true "x1" [c1, c2]
-
-
-  -- print $ make_neg_lam "x2" [c1, c2]
-  -- print $ make_pos_lam_true "x2" [c1, c2]
-
-
-  -- print $ collect_all_vars [c1, c2]
-
-  -- print(make_app_vars 3)
-  -- print(make_lam 3 3)
-
-
--- --takes a negative literal and a list of clauses
--- -- and makes negative exprs.
--- -- c is # of clauses - 1.
--- make_neg_var :: Literal -> LFormula -> Int -> Expr
--- make_neg_var l [] c = (Vi 0)
--- make_neg_var (Neg s) (x:xs) c = 
---   case check_occ_lit (Neg s) x of
---    True -> (App (App (Vv "+") (App (make_var (c-(length xs)))
---                                    (Vv("¬"++s)))) 
---                                    (make_neg_var (Neg s) xs c))
---    otherwise -> (make_neg_var (Neg s) xs c)
-
-
---takes a negative literal and a list of clauses
--- and makes negative exprs.
--- c is # of clauses - 1.
--- make_neg_var :: LiteralName -> LFormula -> Int -> Expr
--- make_neg_var l [] c = (Vi 0)
--- make_neg_var s (x:xs) c 
---   | check_occ_lit (Neg s) x = 
---     App 
---       (App (Vv "+") . App (var $ c - length xs) $ litvar ('¬':) s)
---       $ make_neg_var s xs c
---   | otherwise =
---     (make_neg_var s xs c)
-
-
- -- λv1 : * -> int . λv0 : * -> int .
- --  + (v1 v1) (v0 v0) 
-
--- λv1 : * -> int . λv0 : * -> int . 
---  + (v1 v1) (v0 v0) 
---  (+ ((λ¬x0 : * . (λx0' : int . ¬x0) (+ (v1 ¬x0) 0)) 
---     ((λx0 : * . (λx0' : int . x0) (+ (v0 x0) 0)) True)) 
---   (+ ((λ¬x1 : * . (λx1' : int . ¬x1) (+ (v0 ¬x1) 0)) ((λx1 : * . (λx1' : int . x1) (+ (v1 x1) 0)) True)) 
---     (+ ((λ¬x2 : * . (λx2' : int . ¬x2) 0) ((λx2 : * . (λx2' : int . x2) (+ (v0 x2) (+ (v1 x2) 0))) True)) 0)))
-
-
+--   -- print (make_lam 1 1 [c1, c2])
+--   print (make_mapping [c1, c2])
 
 
 
